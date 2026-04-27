@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
 
-#include "generator.h"
+#include "../include/generator.h"
 
 int main() {
     int m = 5;
