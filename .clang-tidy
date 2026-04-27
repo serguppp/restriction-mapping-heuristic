@@ -10,7 +10,6 @@ Checks: >
   -readability-braces-around-statements
 
 WarningsAsErrors: "bugprone-*,performance-*"
-HeaderFilterRegex: "*"
 CheckOptions:
   - key: readability-identifier-naming.ClassCase
     value: CamelCase
