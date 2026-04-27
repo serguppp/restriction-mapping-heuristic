@@ -3,23 +3,21 @@
 
 #include "generator.h"
 
-using namespace std;
-
 int main() {
     int m = 5;
     int max_value = 25;
-    cout << "Generated P: ";
-    vector<int> p = generate_p(m, max_value);
+    std::cout << "Generated P: ";
+    std::vector<int> p = generate_p(m, max_value);
     for (int i : p) {
-        cout << i << " ";
+        std::cout << i << " ";
     }
-    cout << "\n";
+    std::cout << "\n";
 
-    cout << "Generated D: ";
-    vector<int> d = generate_d_from_p(p, 0);
+    std::cout << "Generated D: ";
+    std::vector<int> d = generate_d_from_p(p, 0);
     for (int i : d) {
-        cout << i << " ";
+        std::cout << i << " ";
     }
-    cout << "\n";
+    std::cout << "\n";
     return 0;
 }
