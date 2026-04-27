@@ -1,4 +1,4 @@
-#include "../include/generator.h"
+#include "../include/generator.hpp"
 
 std::mt19937& get_gen() {
     static std::mt19937 gen(std::random_device{}());
