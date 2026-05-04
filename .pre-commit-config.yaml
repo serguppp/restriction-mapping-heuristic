@@ -5,5 +5,7 @@ repos:
     hooks:
       - id: clang-format
         args: [--style=file]
+        exclude: ^include/external/
       - id: clang-tidy
         args: [--extra-arg=-std=c++20, --extra-arg-before=-xc++]
+        exclude: ^include/external/

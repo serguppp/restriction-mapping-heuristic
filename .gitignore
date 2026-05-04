@@ -1,3 +1,6 @@
 *.exe
 generator-beta.cpp
 /src/main
+
+env/
+__pycache__/
