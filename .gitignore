@@ -1,6 +1,9 @@
 *.exe
 generator-beta.cpp
 /src/main
+/src/algorithm
+/src/algorithm.cpp
 
 env/
 __pycache__/
+

@@ -7,8 +7,7 @@ std::mt19937& get_gen() {
 
 std::vector<int> generate_p(int m, int max_value) {
     if (max_value < m) {
-        throw std::invalid_argument(
-            "max_value must be greater than or equal to m to ensure unique values in P.");
+        throw std::invalid_argument("max_value must be greater than or equal to m to ensure unique values in P.");
     }
 
     std::uniform_int_distribution<> dis(1, max_value);
