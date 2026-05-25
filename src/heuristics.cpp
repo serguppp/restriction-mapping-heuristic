@@ -2,27 +2,30 @@
 #include <iostream>
 #include <numeric>
 #include <random>
+#include <set>
 #include <string>
 #include <vector>
 
+// MIN SUPERSET PDB -  p = {p1, ..., pm} such that D = { |pi - pj| : 1 <= i < j <= m } and m is minimal
 struct Config {
-    const std::string TARGET = "CHRZASZCZ BRZMI W TRZCINIE W SZCZEBRZESZYNIE";
-    const std::string GENES = "ABCDEFGHIJKLMNOPQRSTUVWXYZ ";
     const int POPULATION_SIZE = 100;
     const double MUTATION_RATE = 0.05;
     const double CROSSOVER_RATE = 0.8;
-    const double POPULATION_RATE = 0.1;
-    const double TOURNAMENT_SIZE = 5;
+    const double ELITE_RATE = 0.1;
+    const int MAX_GENERATIONS = 1000;
 };
 
 struct Individual {
-    std::string chromosome;
-    int fitness;
+    std::vector<bool> chromosome;
+    std::vector<int> P;
+    double fitness = 0.0;
 };
 
 class GeneticAlgorithm {
    private:
     Config config;
+    std::vector<int> D;
+    std::vector<int> C;
     std::vector<Individual> population;
     std::mt19937 gen;
 
@@ -36,114 +39,134 @@ class GeneticAlgorithm {
         return distr(gen);
     }
 
-    char create_random_gene() { return config.GENES[random_int(0, static_cast<int>(config.GENES.size()) - 1)]; }
+    int calculate_fitness(const std::vector<int>& P) { return static_cast<int>(C.size() - P.size() + 1); }
 
-    int calculate_fitness(const std::string& chromosome) {
-        int fitness = 0;
-        for (size_t i = 0; i < config.TARGET.size(); i++) {
-            if (chromosome[i] == config.TARGET[i]) {
-                fitness++;
+    std::vector<int> set_candidates() {
+        std::set<int> candidates;
+        if (D.empty()) {
+            return {};
+        }
+
+        int max_distance = *std::ranges::max_element(D.begin(), D.end());
+
+        candidates.insert(0);
+        candidates.insert(max_distance);
+
+        for (int d : D) {
+            candidates.insert(d);
+            candidates.insert(max_distance - d);
+        }
+
+        return {candidates.begin(), candidates.end()};
+    }
+
+    std::vector<Individual> set_population() {
+        std::vector<Individual> pop;
+        pop.reserve(config.POPULATION_SIZE);
+        for (int i = 0; i < config.POPULATION_SIZE; i++) {
+            pop.push_back(create_random_individual());
+        }
+        return pop;
+    }
+
+    bool create_random_gene() { return random_double() < 0.5; }
+
+    static std::vector<int> decode_chromosome(const std::vector<bool>& chromosome) {
+        std::vector<int> p;
+        for (size_t i = 0; i < chromosome.size(); i++) {
+            if (chromosome[i]) {
+                p.push_back(static_cast<int>(i));
             }
         }
-        return fitness;
+        return p;
     }
+    std::vector<bool> encode_chromosome(const std::vector<int>& P) {
+        std::vector<bool> chromosome(C.size(), false);
+        for (int p : P) {
+            if (p >= 0 && p < static_cast<int>(chromosome.size())) {
+                chromosome[p] = true;
+            }
+        }
+        return chromosome;
+    }
+
+    std::vector<int> repair(const std::vector<int>& P) { return P; }
 
     Individual create_random_individual() {
-        std::string chromosome;
-        chromosome.reserve(config.TARGET.size());
-        for (size_t i = 0; i < config.TARGET.size(); i++) {
-            chromosome += create_random_gene();
+        Individual ind;
+        ind.chromosome.reserve(C.size());
+        for (size_t i = 0; i < C.size(); i++) {
+            ind.chromosome.push_back(create_random_gene());
         }
-        return Individual{.chromosome = chromosome, .fitness = calculate_fitness(chromosome)};
+        ind.chromosome[0] = true;
+        ind.chromosome[C.size() - 1] = true;
+        ind.P = decode_chromosome(ind.chromosome);
     }
 
-    Individual select_roulette() {
-        double total_fitness = 0;
-        for (const auto& i : population) {
-            total_fitness += i.fitness;
-        }
+    Individual select_tournament() { return Individual{}; }
 
-        if (total_fitness == 0) {
-            return population[random_int(0, static_cast<int>(population.size()) - 1)];
-        }
+    std::pair<Individual, Individual> crossover() { return {Individual{}, Individual{}}; }
 
-        double slice = random_double() * total_fitness;
-        double sum = 0;
-        for (const auto& i : population) {
-            sum += i.fitness;
-            if (sum >= slice) {
-                return i;
-            }
-        }
-        return population.back();
-    }
-
-    Individual reproduce(const Individual& parent1, const Individual& parent2) {
-        std::string child_chromosome;
-        child_chromosome.reserve(config.TARGET.size());
-
-        bool do_crossover = random_double() < config.CROSSOVER_RATE;
-
-        for (size_t i = 0; i < config.TARGET.size(); i++) {
-            if (do_crossover) {
-                child_chromosome += (random_double() < 0.5) ? parent1.chromosome[i] : parent2.chromosome[i];
-            } else {
-                child_chromosome += parent1.chromosome[i];
-            }
-
-            if (random_double() < config.MUTATION_RATE) {
-                child_chromosome[i] = create_random_gene();
-            }
-        }
-
-        return Individual{.chromosome = child_chromosome, .fitness = calculate_fitness(child_chromosome)};
-    }
+    void mutate(Individual& ind) {}
 
    public:
-    GeneticAlgorithm(Config& cfg) : config(cfg), gen(std::random_device{}()) {
-        for (int i = 0; i < config.POPULATION_SIZE; i++) {
-            population.push_back(create_random_individual());
-        }
+    GeneticAlgorithm(Config& cfg, std::mt19937& g, const std::vector<int>& d) : config(cfg), gen(g), D(d) {
+        C = set_candidates();
+        population = set_population();
     }
 
     void run() {
         int generation = 0;
-        int max_fitness = static_cast<int>(config.TARGET.size());
+        Individual best_individual = population[0];
+        while (generation < config.MAX_GENERATIONS) {
+            std::ranges::sort(population, [](const Individual& a, const Individual& b) { return a.fitness > b.fitness; });
 
-        while (true) {
-            std::ranges::sort(population.begin(), population.end(), [](const Individual& a, const Individual& b) { return a.fitness > b.fitness; });
-
-            std::cout << "Pokolenie: " << generation << " | Najlepszy: " << population[0].chromosome << " | Fitness: " << population[0].fitness << "/" << max_fitness << "\n";
-
-            if (population[0].fitness == max_fitness) {
-                std::cout << "\nSukces! Cel osiagniety w pokoleniu " << generation << ".\n";
-                break;
+            if (population[0].fitness > best_individual.fitness) {
+                best_individual = population[0];
             }
 
-            std::vector<Individual> next_generation;
-            next_generation.reserve(config.POPULATION_SIZE);
+            std::cout << "Generation " << generation << ": Best fitness = " << best_individual.fitness << ", P size = " << best_individual.P.size() << "\n";
 
-            int elite_count = static_cast<int>(config.POPULATION_SIZE * config.POPULATION_RATE);
+            std::vector<Individual> new_population;
+            new_population.reserve(config.POPULATION_SIZE);
+
+            // these below move to separated functions
+            int elite_count = static_cast<int>(config.ELITE_RATE * config.POPULATION_SIZE);
             for (int i = 0; i < elite_count; i++) {
-                next_generation.push_back(population[i]);
+                new_population.push_back(population[i]);
             }
 
-            while (next_generation.size() < static_cast<size_t>(config.POPULATION_SIZE)) {
-                Individual parent1 = select_roulette();
-                Individual parent2 = select_roulette();
-                next_generation.push_back(reproduce(parent1, parent2));
-            }
+            while (new_population.size() < config.POPULATION_SIZE) {
+                Individual parent1 = select_tournament();
+                Individual parent2 = select_tournament();
 
-            population = std::move(next_generation);
+                Individual child1, child2;
+
+                if (random_double() < config.CROSSOVER_RATE) {
+                    auto [c1, c2] = crossover();
+                    child1 = c1;
+                    child2 = c2;
+                }
+
+                mutate(child1);
+                mutate(child2);
+
+                child1.P = repair(child1.P);
+                child2.P = repair(child2.P);
+
+                child1.chromosome = encode_chromosome(child1.P);
+                child2.chromosome = encode_chromosome(child2.P);
+
+                child1.fitness = calculate_fitness(child1.P);
+                child2.fitness = calculate_fitness(child2.P);
+
+                new_population.push_back(child1);
+                if (new_population.size() < config.POPULATION_SIZE) {
+                    new_population.push_back(child2);
+                }
+            }
+            population = std::move(new_population);
             generation++;
         }
     }
 };
-
-int main() {
-    Config config;
-    GeneticAlgorithm ga(config);
-    ga.run();
-
-    return 0;
-}
