@@ -82,16 +82,13 @@ class GeneticAlgorithm {
     }
     std::vector<bool> encode_chromosome(const std::vector<int>& P) {
         std::vector<bool> chromosome(C.size(), false);
-        for (int p : P) {
-            if (p >= 0 && p < static_cast<int>(chromosome.size())) {
+        for (unsigned int p : P) {
+            if (p >= 0 && p < static_cast<unsigned int>(chromosome.size())) {
                 chromosome[p] = true;
             }
         }
         return chromosome;
     }
-
-    std::vector<int> repair(const std::vector<int>& P) { return P; }
-
     Individual create_random_individual() {
         Individual ind;
         ind.chromosome.reserve(C.size());
@@ -103,9 +100,28 @@ class GeneticAlgorithm {
         ind.P = decode_chromosome(ind.chromosome);
     }
 
+    std::vector<int> repair(const std::vector<int>& P) { return P; }
+
     Individual select_tournament() { return Individual{}; }
 
-    std::pair<Individual, Individual> crossover() { return {Individual{}, Individual{}}; }
+    std::pair<Individual, Individual> crossover(const Individual& p1, const Individual& p2) {
+        Individual c1;
+        Individual c2;
+
+        c1.chromosome.resize(C.size());
+        c2.chromosome.resize(C.size());
+
+        for (size_t i = 0; i < C.size(); i++) {
+            if (random_double() < 0.5) {
+                c1.chromosome[i] = p1.chromosome[i];
+                c2.chromosome[i] = p2.chromosome[i];
+            } else {
+                c1.chromosome[i] = p2.chromosome[i];
+                c2.chromosome[i] = p1.chromosome[i];
+            }
+        }
+        return {c1, c2};
+    }
 
     void mutate(Individual& ind) {}
 
@@ -140,10 +156,11 @@ class GeneticAlgorithm {
                 Individual parent1 = select_tournament();
                 Individual parent2 = select_tournament();
 
-                Individual child1, child2;
+                Individual child1;
+                Individual child2;
 
                 if (random_double() < config.CROSSOVER_RATE) {
-                    auto [c1, c2] = crossover();
+                    auto [c1, c2] = crossover(parent1, parent2);
                     child1 = c1;
                     child2 = c2;
                 }
