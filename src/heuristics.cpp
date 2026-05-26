@@ -13,6 +13,7 @@ struct Config {
     const double CROSSOVER_RATE = 0.8;
     const double ELITE_RATE = 0.1;
     const int MAX_GENERATIONS = 1000;
+    const int TOURNAMENT_SIZE = 5;
 };
 
 struct Individual {
@@ -98,11 +99,24 @@ class GeneticAlgorithm {
         ind.chromosome[0] = true;
         ind.chromosome[C.size() - 1] = true;
         ind.P = decode_chromosome(ind.chromosome);
+
+        return ind;
     }
 
     std::vector<int> repair(const std::vector<int>& P) { return P; }
 
-    Individual select_tournament() { return Individual{}; }
+    Individual select() {
+        Individual best_ind;
+        best_ind.fitness = -1.0;
+
+        for (int i = 0; i < config.TOURNAMENT_SIZE; i++) {
+            int random_id = random_int(0, static_cast<int>(population.size() - 1));
+            if (population[random_id].fitness > best_ind.fitness) {
+                best_ind = population[random_id];
+            }
+        }
+        return best_ind;
+    }
 
     std::pair<Individual, Individual> crossover(const Individual& p1, const Individual& p2) {
         Individual c1;
@@ -159,8 +173,8 @@ class GeneticAlgorithm {
             }
 
             while (new_population.size() < config.POPULATION_SIZE) {
-                Individual parent1 = select_tournament();
-                Individual parent2 = select_tournament();
+                Individual parent1 = select();
+                Individual parent2 = select();
 
                 Individual child1;
                 Individual child2;
