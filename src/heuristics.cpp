@@ -72,11 +72,11 @@ class GeneticAlgorithm {
 
     bool create_random_gene() { return random_double() < 0.5; }
 
-    static std::vector<int> decode_chromosome(const std::vector<bool>& chromosome) {
+    std::vector<int> decode_chromosome(const std::vector<bool>& chromosome) {
         std::vector<int> p;
         for (size_t i = 0; i < chromosome.size(); i++) {
             if (chromosome[i]) {
-                p.push_back(static_cast<int>(i));
+                p.push_back(C[i]);
             }
         }
         return p;
@@ -84,10 +84,14 @@ class GeneticAlgorithm {
     std::vector<bool> encode_chromosome(const std::vector<int>& P) {
         std::vector<bool> chromosome(C.size(), false);
         for (unsigned int p : P) {
-            if (p >= 0 && p < static_cast<unsigned int>(chromosome.size())) {
-                chromosome[p] = true;
+            auto it = std::ranges::find(C, p);
+            if (it != C.end()) {
+                chromosome[std::ranges::distance(C.begin(), it)] = true;
             }
         }
+
+        chromosome[0] = true;
+        chromosome[C.size() - 1] = true;
         return chromosome;
     }
     Individual create_random_individual() {
