@@ -2,6 +2,10 @@ import streamlit as st
 import subprocess
 import json
 
+
+def dump_json(list):
+    return json.dumps(list, separators=(",", ":"))
+
 class CppRunner:
     def __init__(self, exe_path):
         self.exe_path = exe_path
@@ -16,7 +20,15 @@ class CppRunner:
     
     def run_generate_d(self, p_list):
         return subprocess.run(
-            [self.exe_path, "1", json.dumps(p_list, separators=(",", ":"))],
+            [self.exe_path, "1", dump_json(p_list)],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+    
+    def run_heuristics(self, p_list, d_list):
+        return subprocess.run(
+            [self.exe_path, "2", dump_json(p_list), dump_json(d_list)],
             capture_output=True,
             text=True,
             check=True

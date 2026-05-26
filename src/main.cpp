@@ -6,6 +6,7 @@
 
 #include "../include/external/json.hpp"
 #include "../include/generator.hpp"
+#include "../include/heuristics.hpp"
 
 using json = nlohmann::json;
 
@@ -14,7 +15,7 @@ enum class ExecutionMode { DEFAULT = 0, GENERATE_D = 1, RUN_HEURISTICS = 2 };
 // 0 - Generowanie P i D
 // 1 - Generowanie D na podstawie P
 // 2 - Uruchomienie heurystyki
-json process_flags(ExecutionMode flag, int p_size = 0, int max_value = 0, const std::vector<int>& p_vector = {}) {
+json process_flags(ExecutionMode flag, int p_size = 0, int max_value = 0, const std::vector<int>& p_vector = {}, const std::vector<int>& d_vector = {}) {
     switch (flag) {
         case ExecutionMode::DEFAULT: {
             std::vector<int> p_points = generate_p(p_size, max_value);
@@ -26,7 +27,10 @@ json process_flags(ExecutionMode flag, int p_size = 0, int max_value = 0, const 
             return json{{"status", "success"}, {"p_points", p_vector}, {"d_distances", d_distances}};
         }
         case ExecutionMode::RUN_HEURISTICS: {
-            return json{{"status", "success"}, {"message", "Not implemented yet"}};
+            Config cfg;
+            GeneticAlgorithm ga(cfg, get_gen(), d_vector);
+            std::pair<int, std::vector<int>> result = ga.run();
+            return json{{"status", "success"}, {"m_value", result.first}, {"p_result", result.second}};
         }
         default:
             return json{{"status", "error"}, {"message", "Unknown execution mode"}};
@@ -55,13 +59,23 @@ int main(int argc, char** argv) {
 
         } else if (flag == ExecutionMode::GENERATE_D) {
             if (argc < 3) {
-                std::cout << R"({"status": "error", "message": "Mode 1 requires a JSON array string: '[1,2,3]'"})" << "\n";
+                std::cout << R"({"status": "error", "message": "Mode 1 requires a JSON array string p_list})" << "\n";
                 return 1;
             }
             std::vector<int> p_vector = json::parse(argv[2]).get<std::vector<int>>();
-            output = process_flags(flag, 0, 0, p_vector);
+            output = process_flags(flag = flag, 0, 0, p_vector);
 
-        } else {
+        } else if (flag == ExecutionMode::RUN_HEURISTICS) {
+            if (argc < 4) {
+                std::cout << R"({"status": "error", "message": "Mode 2 requires  a JSON array strings <p_list> <d_list>"})" << "\n";
+                return 1;
+            }
+            std::vector<int> p_vector = json::parse(argv[2]).get<std::vector<int>>();
+            std::vector<int> d_vector = json::parse(argv[3]).get<std::vector<int>>();
+            output = process_flags(flag, 0, 0, p_vector, d_vector);
+        }
+
+        else {
             output = process_flags(flag);
         }
 

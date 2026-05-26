@@ -19,6 +19,10 @@ if "p_points" not in st.session_state:
     st.session_state.p_points = []
 if "d_distances" not in st.session_state:
     st.session_state.d_distances = []
+if "m_value" not in st.session_state:
+    st.session_state.m_value = ""
+if "p_result" not in st.session_state:
+    st.session_state.p_result = []
 if "success_msg" not in st.session_state:
     st.session_state.success_msg = ""
 
@@ -26,7 +30,7 @@ if st.session_state.success_msg:
     st.success(st.session_state.success_msg)
     st.session_state.success_msg = ""
 
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns(3)
                 
 with col1:
     st.subheader("Generated P Points")
@@ -48,9 +52,24 @@ with col2:
         height=150
     )
 
+with col3:
+    st.subheader("Results")
+    
+    if st.session_state.m_value != "":
+        st.metric(label="Found P Size (m)", value=st.session_state.m_value)
+        
+    p_res = ", ".join(map(str, st.session_state.p_result)) if st.session_state.p_result else ""
+    st.text_area(
+        label="Result P Points",
+        value=p_res,
+        height=150,
+        disabled=True, 
+    )
+
 
 runner = CppRunner(CPP_EXE_PATH)
 ui = Button(runner)
 
 ui.render_generate_p_and_d(m, max_val)
 ui.render_generate_d(p_text_area)
+ui.render_run_heuristics(p_text_area, d_text_area)
