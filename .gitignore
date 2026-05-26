@@ -2,6 +2,7 @@
 generator-beta.cpp
 /src/main
 /src/algorithm
+/src/heuristics
 /src/algorithm.cpp
 
 env/
