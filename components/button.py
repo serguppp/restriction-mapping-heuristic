@@ -21,7 +21,7 @@ class Button():
             if data["status"] == "success":
                 st.session_state.p_points = data["p_points"]
                 st.session_state.d_distances = data["d_distances"]
-                st.success(f"Done in {time.time() - start:.4f}s")
+                st.session_state.success_msg = f"Data generated successfully in {time.time() - start:.4f}s!"
                 st.rerun()
 
     def render_generate_d(self, p_text_area):
@@ -42,11 +42,23 @@ class Button():
         if st.button("Run Algorithm"):
             p_list = convert_text_to_list(p_text_area)
             d_list = convert_text_to_list(d_text_area)
+
+            st.subheader("Algorithm Progress")
+            status_text = st.empty()
             process = self.runner.run_heuristics(p_list, d_list)
-            data = json.loads(process.stdout)
-        
+            while True:
+                line = process.stderr.readline()
+                if not line and process.poll() is not None:
+                    break 
+                if line:
+                    status_text.code(line.strip(), language="text")
+
+            data = json.loads(process.stdout.read())
+                
             if data["status"] == "success":
                 st.session_state.m_value = data["m_value"]
                 st.session_state.p_result = data["p_result"]
+                st.session_state.success_msg = "Algorithm finished successfully!"
                 st.rerun()
+ 
 

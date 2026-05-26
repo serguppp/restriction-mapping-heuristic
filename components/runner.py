@@ -27,9 +27,10 @@ class CppRunner:
         )
     
     def run_heuristics(self, p_list, d_list):
-        return subprocess.run(
+        return subprocess.Popen(
             [self.exe_path, "2", dump_json(p_list), dump_json(d_list)],
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             text=True,
-            check=True
+            bufsize=1 
         )
