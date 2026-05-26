@@ -123,7 +123,13 @@ class GeneticAlgorithm {
         return {c1, c2};
     }
 
-    void mutate(Individual& ind) {}
+    void mutate(Individual& ind) {
+        for (size_t i = 1; i < C.size() - 1; i++) {
+            if (random_double() < 0.5) {
+                ind.chromosome[i] = !ind.chromosome[i];
+            }
+        }
+    }
 
    public:
     GeneticAlgorithm(Config& cfg, std::mt19937& g, const std::vector<int>& d) : config(cfg), gen(g), D(d) {
