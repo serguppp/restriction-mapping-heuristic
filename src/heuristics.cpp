@@ -103,7 +103,31 @@ class GeneticAlgorithm {
         return ind;
     }
 
-    std::vector<int> repair(const std::vector<int>& P) { return P; }
+    std::vector<int> repair(std::vector<int> child_p) {
+        std::ranges::sort(child_p);
+        while (true) {
+            std::vector<int> child_d;
+            for (size_t i = 0; i < child_p.size(); i++) {
+                for (size_t j = i + 1; j < child_p.size(); j++) {
+                    child_d.push_back(std::abs(child_p[i] - child_p[j]));
+                }
+            }
+            std::ranges::sort(child_d);
+            std::vector<int> d_copy = D;
+            std::vector<int> missing_d_values;
+            std::ranges::set_difference(child_d, d_copy, std::back_inserter(missing_d_values));
+
+            if (missing_d_values.empty()) {
+                break;
+            }
+
+            // greedy repiar
+            int missing_distance = missing_d_values.back();
+            child_p.push_back(missing_distance);
+        }
+
+        return child_p;
+    }
 
     Individual select() {
         Individual best_ind;
@@ -176,8 +200,8 @@ class GeneticAlgorithm {
                 Individual parent1 = select();
                 Individual parent2 = select();
 
-                Individual child1;
-                Individual child2;
+                Individual child1 = parent1;
+                Individual child2 = parent2;
 
                 if (random_double() < config.CROSSOVER_RATE) {
                     auto [c1, c2] = crossover(parent1, parent2);
