@@ -91,7 +91,7 @@ class GeneticAlgorithm {
         }
 
         chromosome[0] = true;
-        chromosome[C.size() - 1] = true;
+        chromosome.back() = true;
         return chromosome;
     }
     Individual create_random_individual() {
@@ -101,9 +101,12 @@ class GeneticAlgorithm {
             ind.chromosome.push_back(create_random_gene());
         }
         ind.chromosome[0] = true;
-        ind.chromosome[C.size() - 1] = true;
-        ind.P = decode_chromosome(ind.chromosome);
+        ind.chromosome.back() = true;
 
+        ind.P = decode_chromosome(ind.chromosome);
+        ind.P = repair(ind.P);
+        ind.chromosome = encode_chromosome(ind.P);
+        ind.fitness = calculate_fitness(ind.P);
         return ind;
     }
 
@@ -117,9 +120,8 @@ class GeneticAlgorithm {
                 }
             }
             std::ranges::sort(child_d);
-            std::vector<int> d_copy = D;
             std::vector<int> missing_d_values;
-            std::ranges::set_difference(child_d, d_copy, std::back_inserter(missing_d_values));
+            std::ranges::set_difference(D, child_d, std::back_inserter(missing_d_values));
 
             if (missing_d_values.empty()) {
                 break;
@@ -167,7 +169,7 @@ class GeneticAlgorithm {
 
     void mutate(Individual& ind) {
         for (size_t i = 1; i < C.size() - 1; i++) {
-            if (random_double() < 0.5) {
+            if (random_double() < config.MUTATION_RATE) {
                 ind.chromosome[i] = !ind.chromosome[i];
             }
         }
@@ -177,6 +179,7 @@ class GeneticAlgorithm {
     GeneticAlgorithm(Config& cfg, std::mt19937& g, const std::vector<int>& d) : config(cfg), gen(g), D(d) {
         C = set_candidates();
         population = set_population();
+        std::ranges::sort(D);
     }
 
     void run() {
@@ -215,6 +218,9 @@ class GeneticAlgorithm {
 
                 mutate(child1);
                 mutate(child2);
+
+                child1.P = decode_chromosome(child1.chromosome);
+                child2.P = decode_chromosome(child2.chromosome);
 
                 child1.P = repair(child1.P);
                 child2.P = repair(child2.P);
