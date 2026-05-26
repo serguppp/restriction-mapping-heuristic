@@ -83,7 +83,7 @@ class GeneticAlgorithm {
     }
     std::vector<bool> encode_chromosome(const std::vector<int>& P) {
         std::vector<bool> chromosome(C.size(), false);
-        for (unsigned int p : P) {
+        for (int p : P) {
             auto it = std::ranges::find(C, p);
             if (it != C.end()) {
                 chromosome[std::ranges::distance(C.begin(), it)] = true;
@@ -130,6 +130,7 @@ class GeneticAlgorithm {
             // greedy repiar
             int missing_distance = missing_d_values.back();
             child_p.push_back(missing_distance);
+            std::ranges::sort(child_p);
         }
 
         return child_p;
@@ -177,9 +178,9 @@ class GeneticAlgorithm {
 
    public:
     GeneticAlgorithm(Config& cfg, std::mt19937& g, const std::vector<int>& d) : config(cfg), gen(g), D(d) {
+        std::ranges::sort(D);
         C = set_candidates();
         population = set_population();
-        std::ranges::sort(D);
     }
 
     void run() {
