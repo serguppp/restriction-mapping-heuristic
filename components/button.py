@@ -41,13 +41,11 @@ class Button():
                 st.session_state.d_distances = map_list_to_string(data["d_distances"])
                 st.rerun()
 
-    def render_run_heuristics(self, p_text_area:str, d_text_area:str):
+    def render_run_heuristics(self, p_text_area:str, d_text_area:str, status_text):
         if st.button("Run Algorithm"):
             p_list = map_text_to_list(p_text_area)
             d_list = map_text_to_list(d_text_area)
 
-            st.subheader("Algorithm Progress")
-            status_text = st.empty()
             process = self.runner.run_heuristics(p_list, d_list)
             while True:
                 line = process.stderr.readline()
