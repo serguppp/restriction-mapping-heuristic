@@ -13,7 +13,6 @@ CPP_EXE_PATH = "./src/main"
 st.set_page_config(page_title="Restriction Mapping Heuristics", layout="centered")
 st.title("Restriction Mapping Heuristics")
 
-
 if "p_points" not in st.session_state:
     st.session_state.p_points = ""
 if "d_distances" not in st.session_state:
@@ -40,7 +39,7 @@ with col1:
 with col2:
     st.subheader("Set of D Distances")
     #d_distances = json.dumps(st.session_state.d_distances) if st.session_state.d_distances else ""
-    d_distances =st.session_state.d_distances if st.session_state.d_distances else "" 
+    d_distances = st.session_state.d_distances if st.session_state.d_distances else "" 
     d_text_area = st.text_area(
         label = "Generated D Distances",
         value = d_distances,
@@ -67,7 +66,6 @@ st.text_area(
     disabled=True
 )
 
-
 runner = CppRunner(CPP_EXE_PATH)
 button = Button(runner)
 
@@ -82,4 +80,4 @@ with st.sidebar:
 
     button.render_generate_p_and_d(m, max_val)
     button.render_generate_d(st.session_state.p_points)
-    button.render_run_heuristics(st.session_state.p_points, st.session_state.d_distances, status_text)
+    button.render_run_heuristics(p_text_area, d_text_area, status_text)
