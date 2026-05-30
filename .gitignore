@@ -1,6 +1,7 @@
 *.exe
 generator-beta.cpp
 /src/main
+/src/generator
 /src/algorithm
 /src/heuristics
 /src/algorithm.cpp
