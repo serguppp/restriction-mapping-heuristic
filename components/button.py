@@ -1,24 +1,25 @@
 import streamlit as st
-import subprocess
 import json
 import time
 
-
-def map_text_to_list(text):
+def map_text_to_list(text) -> list[int]:
     return [int(x.strip()) for x in text.split(",") if x.strip()]
 
-def map_list_to_string(list):
+def map_list_to_string(list) -> str:
     return  ", ".join(map(str, list))
+
+def dump_json(list: list) -> str:
+    return json.dumps(list, separators=(",", ":"))
 
 class Button():
     def __init__(self, runner):
         self.runner = runner
     
-    def render_generate_p_and_d(self, m, max_val:str):
-        if st.button("Generate P and D", type="primary"):
+    def render_generate_p_and_d(self, m, max_value:str):
+        if st.button("Set P,D", use_container_width=True):
             start = time.time()
 
-            process = self.runner.run_generate_p_and_d(m, max_val)
+            process = self.runner.run_generate_p_and_d(str(m), str(max_value))
             data = json.loads(process.stdout)
 
             if data["status"] == "success":
@@ -28,25 +29,31 @@ class Button():
                 st.rerun()
 
     def render_generate_d(self, p_text_area:str):
-        if st.button("Generate D"):
+        if st.button("Set D", use_container_width=True):
             if not p_text_area.strip():
                 st.warning("P vector is empty")
                 return
 
-            p_list = map_text_to_list(p_text_area)
-            process = self.runner.run_generate_d(p_list)
+            p_list_json = dump_json(map_text_to_list(p_text_area))
+
+            process = self.runner.run_generate_d(p_list_json)
             data = json.loads(process.stdout)
 
             if data["status"] == "success":
                 st.session_state.d_distances = map_list_to_string(data["d_distances"])
                 st.rerun()
 
-    def render_run_heuristics(self, p_text_area:str, d_text_area:str, status_text):
-        if st.button("Run Algorithm"):
-            p_list = map_text_to_list(p_text_area)
-            d_list = map_text_to_list(d_text_area)
+    def render_run_heuristics(self, p_text_area:str, d_text_area:str, population_size: int, mutation_rate: float, crossover_rate: float,
+                              elite_rate: float, max_generations: int, tournament_size: int, status_text):
+        if st.button("Run", type="primary"):
+            if not p_text_area.strip() or not d_text_area.strip():
+                st.warning("P or D vector is empty")
+                return
+            p_list_json = dump_json(map_text_to_list(p_text_area))
+            d_list_json = dump_json(map_text_to_list(d_text_area))
 
-            process = self.runner.run_heuristics(p_list, d_list)
+            process = self.runner.run_heuristics(p_list_json, d_list_json, str(population_size), str(mutation_rate), str(crossover_rate), str(elite_rate), 
+                                                 str(max_generations), str(tournament_size))
             while True:
                 line = process.stderr.readline()
                 if not line and process.poll() is not None:

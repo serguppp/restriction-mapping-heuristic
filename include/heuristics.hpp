@@ -8,14 +8,26 @@
 #include <string>
 #include <vector>
 
+#include "../include/parameters.hpp"
+
 // MIN SUPERSET PDB - p = {p1, ..., pm} such that D = { |pi - pj| : 1 <= i < j <= m } and m is minimal
 struct Config {
-    const int POPULATION_SIZE = 100;
-    const double MUTATION_RATE = 0.05;
-    const double CROSSOVER_RATE = 0.8;
-    const double ELITE_RATE = 0.1;
-    const int MAX_GENERATIONS = 1000;
-    const int TOURNAMENT_SIZE = 5;
+    int POPULATION_SIZE;
+    double MUTATION_RATE;
+    double CROSSOVER_RATE;
+    double ELITE_RATE;
+    int MAX_GENERATIONS;
+    int TOURNAMENT_SIZE;
+
+    Config() : POPULATION_SIZE(100), MUTATION_RATE(0.05), CROSSOVER_RATE(0.8), ELITE_RATE(0.1), MAX_GENERATIONS(1000), TOURNAMENT_SIZE(5) {}
+    Config(const Parameters& p) : Config() {
+        POPULATION_SIZE = std::stoi(p.population_size);
+        MUTATION_RATE = std::stod(p.mutation_rate);
+        CROSSOVER_RATE = std::stod(p.crossover_rate);
+        ELITE_RATE = std::stod(p.elite_rate);
+        MAX_GENERATIONS = std::stoi(p.max_generations);
+        TOURNAMENT_SIZE = std::stoi(p.tournament_size);
+    }
 };
 
 struct Individual {

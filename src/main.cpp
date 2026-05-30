@@ -7,28 +7,84 @@
 #include "../include/external/json.hpp"
 #include "../include/generator.hpp"
 #include "../include/heuristics.hpp"
+#include "../include/parameters.hpp"
 
 using json = nlohmann::json;
-
-enum class ExecutionMode { DEFAULT = 0, GENERATE_D = 1, RUN_HEURISTICS = 2 };
 
 // 0 - Generowanie P i D
 // 1 - Generowanie D na podstawie P
 // 2 - Uruchomienie heurystyki
-json process_flags(ExecutionMode flag, int p_size = 0, int max_value = 0, const std::vector<int>& p_vector = {}, const std::vector<int>& d_vector = {}) {
-    switch (flag) {
+
+Parameters parse_arguments(int argc, char** argv) {
+    if (argc < 2) {
+        std::cerr << R"({"status": "error", "message": "Missing arguments: <mode>"})" << "\n";
+        throw std::runtime_error("Invalid arguments");
+    }
+
+    Parameters params;
+
+    int flag_value = std::stoi(argv[1]);
+    params.flag = static_cast<ExecutionMode>(flag_value);
+
+    switch (params.flag) {
         case ExecutionMode::DEFAULT: {
-            std::vector<int> p_points = generate_p(p_size, max_value);
-            std::vector<int> d_distances = generate_d_from_p(p_points, 0);
-            return json{{"status", "success"}, {"p_points", p_points}, {"d_distances", d_distances}};
+            if (argc < 4) {
+                std::cerr << R"({"status": "error", "message": "Mode 0 requires parameters: <m:str> <max_value:str>"})" << "\n";
+                throw std::runtime_error("Invalid arguments");
+            }
+            params.m = std::stoi(argv[2]);
+            params.max_value = std::stoi(argv[3]);
+            break;
         }
         case ExecutionMode::GENERATE_D: {
-            std::vector<int> d_distances = generate_d_from_p(p_vector, 0);
-            return json{{"status", "success"}, {"p_points", p_vector}, {"d_distances", d_distances}};
+            if (argc < 3) {
+                std::cerr << R"({"status": "error", "message": "Mode 1 requires parameters: <mode:str> <p_list_json:str>})" << "\n";
+                throw std::runtime_error("Invalid arguments");
+            }
+            params.p_vector = json::parse(argv[2]).get<std::vector<int>>();
+            break;
+        }
+
+        case ExecutionMode::RUN_HEURISTICS: {
+            if (argc < 10) {
+                std::cerr
+                    << R"({"status": "error", "message": "Mode 2 requires parameters: <mode:str> <p_list_json:str> <d_list_json:str> <population_size:str>, <mutation_rate:str>, <crossover_rate:str>, <elite_rate:str>, <max_generations:str>, <tournament_size:str>"})"
+                    << "\n";
+                throw std::runtime_error("Invalid arguments");
+            }
+            params.flag = ExecutionMode::RUN_HEURISTICS;
+            params.p_vector = json::parse(argv[2]).get<std::vector<int>>();
+            params.d_vector = json::parse(argv[3]).get<std::vector<int>>();
+            params.population_size = argv[4];
+            params.mutation_rate = argv[5];
+            params.crossover_rate = argv[6];
+            params.elite_rate = argv[7];
+            params.max_generations = argv[8];
+            params.tournament_size = argv[9];
+            break;
+        }
+        default: {
+            std::cerr << R"({"status": "error", "message": "Unknown execution mode"})" << "\n";
+            throw std::runtime_error("Invalid arguments");
+        }
+    }
+    return params;
+}
+
+json process_flags(const Parameters& params) {
+    switch (params.flag) {
+        case ExecutionMode::DEFAULT: {
+            auto p_vector = generate_p(params.m, params.max_value);
+            auto d_vector = generate_d_from_p(p_vector, 0);  // TODO: Add errors
+            return json{{"status", "success"}, {"p_points", p_vector}, {"d_distances", d_vector}};
+        }
+        case ExecutionMode::GENERATE_D: {
+            auto d_vector = generate_d_from_p(params.p_vector, 0);  // TODO: Add errors
+            return json{{"status", "success"}, {"p_points", params.p_vector}, {"d_distances", d_vector}};
         }
         case ExecutionMode::RUN_HEURISTICS: {
-            Config cfg;
-            GeneticAlgorithm ga(cfg, get_gen(), d_vector);
+            Config cfg(params);
+            GeneticAlgorithm ga(cfg, get_gen(), params.d_vector);
             std::pair<int, std::vector<int>> result = ga.run();
             return json{{"status", "success"}, {"m_value", result.first}, {"p_result", result.second}};
         }
@@ -38,56 +94,14 @@ json process_flags(ExecutionMode flag, int p_size = 0, int max_value = 0, const 
 }
 
 int main(int argc, char** argv) {
-    if (argc < 3) {
-        std::cerr << R"({"status": "error", "message": "Missing arguments <m> <max_value>"})" << "\n";
-        return 1;
-    }
-
     try {
-        int flag_value = std::stoi(argv[1]);
-        auto flag = static_cast<ExecutionMode>(flag_value);
-
-        json output;
-        if (flag == ExecutionMode::DEFAULT) {
-            if (argc < 4) {
-                std::cout << R"({"status": "error", "message": "Mode 0 requires: <p_size> <max_value>"})" << "\n";
-                return 1;
-            }
-            int p_size = std::stoi(argv[2]);
-            int max_val = std::stoi(argv[3]);
-            output = process_flags(flag, p_size, max_val);
-
-        } else if (flag == ExecutionMode::GENERATE_D) {
-            if (argc < 3) {
-                std::cout << R"({"status": "error", "message": "Mode 1 requires a JSON array string p_list})" << "\n";
-                return 1;
-            }
-            std::vector<int> p_vector = json::parse(argv[2]).get<std::vector<int>>();
-            output = process_flags(flag = flag, 0, 0, p_vector);
-
-        } else if (flag == ExecutionMode::RUN_HEURISTICS) {
-            if (argc < 4) {
-                std::cout << R"({"status": "error", "message": "Mode 2 requires  a JSON array strings <p_list> <d_list>"})" << "\n";
-                return 1;
-            }
-            std::vector<int> p_vector = json::parse(argv[2]).get<std::vector<int>>();
-            std::vector<int> d_vector = json::parse(argv[3]).get<std::vector<int>>();
-            output = process_flags(flag, 0, 0, p_vector, d_vector);
-        }
-
-        else {
-            output = process_flags(flag);
-        }
+        Parameters params = parse_arguments(argc, argv);
+        auto output = process_flags(params);
 
         std::cout << output.dump() << "\n";
 
     } catch (const std::exception& e) {
-        std::cout << R"({"status": "error", "message": "Exception in C++: "})" << e.what() << R"("})" << "\n";
-        return 1;
-
-    } catch (...) {
-        std::cout << R"({"status": "error", "message": "Unknown critical error"})" << "\n";
-        return 1;
+        std::cerr << R"({"status": "error", "message": "Exception in C++: "})" << e.what() << R"("})" << "\n";
     }
 
     return 0;
