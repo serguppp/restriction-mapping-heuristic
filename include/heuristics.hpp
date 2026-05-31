@@ -21,12 +21,12 @@ struct Config {
 
     Config() : POPULATION_SIZE(100), MUTATION_RATE(0.05), CROSSOVER_RATE(0.8), ELITE_RATE(0.1), MAX_GENERATIONS(1000), TOURNAMENT_SIZE(5) {}
     Config(const Parameters& p) : Config() {
-        POPULATION_SIZE = std::stoi(p.population_size);
-        MUTATION_RATE = std::stod(p.mutation_rate);
-        CROSSOVER_RATE = std::stod(p.crossover_rate);
-        ELITE_RATE = std::stod(p.elite_rate);
-        MAX_GENERATIONS = std::stoi(p.max_generations);
-        TOURNAMENT_SIZE = std::stoi(p.tournament_size);
+        POPULATION_SIZE = p.population_size;
+        MUTATION_RATE = p.mutation_rate;
+        CROSSOVER_RATE = p.crossover_rate;
+        ELITE_RATE = p.elite_rate;
+        MAX_GENERATIONS = p.max_generations;
+        TOURNAMENT_SIZE = p.tournament_size;
     }
 };
 

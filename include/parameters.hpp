@@ -10,10 +10,12 @@ struct Parameters {
     int max_value;
     std::vector<int> p_vector;
     std::vector<int> d_vector;
-    std::string population_size;
-    std::string mutation_rate;
-    std::string crossover_rate;
-    std::string elite_rate;
-    std::string max_generations;
-    std::string tournament_size;
+    int population_size;
+    double mutation_rate;
+    double crossover_rate;
+    double elite_rate;
+    int max_generations;
+    int tournament_size;
+    int positive_errors;
+    int negative_errors;
 };

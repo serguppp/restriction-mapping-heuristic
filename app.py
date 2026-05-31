@@ -2,6 +2,7 @@ import streamlit as st
 from components.button import RunnerButton, Button
 from components.runner import CppRunner
 from components.config import Config
+from collections import Counter
 
 CPP_EXE_PATH = "./src/main"
 
@@ -15,6 +16,7 @@ config = Config.get()
 for key, value in config.items():
     if key not in st.session_state:
         st.session_state[key] = value
+
 
 if "p_points" not in st.session_state:
     st.session_state.p_points = ""
@@ -80,22 +82,23 @@ with col1:
         max_value = st.number_input("Max Distance Value", min_value=1, max_value=1000, key = "max_value")
         population_size = st.number_input("Population Size", min_value=1, max_value=1000,  key = "population_size")
         mutation_rate = st.number_input("Mutation Rate", min_value=0.01, max_value=1.0, key = "mutation_rate")
+        positive_errors = st.number_input("Positive Errors", min_value = 0, key = "positive_errors")
     with col2_2:
         crossover_rate = st.number_input("Crossover Rate", min_value=0.01, max_value=1.0, key = "crossover_rate")
         elite_rate = st.number_input("Elite Rate", min_value=0.01, max_value=1.0, key = "elite_rate")
         max_generations = st.number_input("Max Generations", min_value=1, max_value=10000, key = "max_generations")
         tournament_size = st.number_input("Tournament Size", min_value=1, max_value=100, key = "tournament_size")
+        negative_errors = st.number_input("Negative Errors", min_value = 0, key = "negative_errors")
     
     button.render_reset_params()
     
-
     st.header("Actions")
 
     sb_col1, sb_col2, sb_col3 = st.columns([1.5,1.5,1])
     with sb_col1:
-        runner_button.render_generate_p_and_d(m, max_value)
+        runner_button.render_generate_p_and_d(m, max_value, st.session_state.positive_errors, st.session_state.negative_errors)
     with sb_col2:
-        runner_button.render_generate_d(st.session_state.p_points)
+        runner_button.render_generate_d(st.session_state.p_points, st.session_state.positive_errors, st.session_state.negative_errors)
     with sb_col3:
         runner_button.render_run_heuristics(p_text_area, d_text_area, population_size, mutation_rate, crossover_rate, elite_rate, max_generations, tournament_size, status_text)
 

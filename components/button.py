@@ -1,3 +1,4 @@
+from numpy import negative
 import streamlit as st
 import json
 import time
@@ -17,11 +18,11 @@ class RunnerButton():
     def __init__(self, runner) -> None:
         self.runner: CppRunner = runner
     
-    def render_generate_p_and_d(self, m, max_value:int) -> None:
+    def render_generate_p_and_d(self, m, max_value:int, positive_errors: int, negative_errors: int) -> None:
         if st.button("Set P,D", use_container_width=True):
             start = time.time()
 
-            stdout = self.runner.run_generate_p_and_d([str(m), str(max_value)])
+            stdout = self.runner.run_generate_p_and_d([str(m), str(max_value), str(positive_errors), str(negative_errors)])
             data = json.loads(stdout)
 
             if data["status"] == "success":
@@ -30,7 +31,7 @@ class RunnerButton():
                 st.session_state.success_msg = f"Data generated successfully in {time.time() - start:.4f}s!"
                 st.rerun()
 
-    def render_generate_d(self, p_text_area:str) -> None:
+    def render_generate_d(self, p_text_area:str, positive_errors: int, negative_errors: int) -> None:
         if st.button("Set D", use_container_width=True):
             if not p_text_area.strip():
                 st.warning("P vector is empty")
@@ -38,7 +39,7 @@ class RunnerButton():
 
             p_list_json = dump_json(map_text_to_list(p_text_area))
 
-            stdout = self.runner.run_generate_d([p_list_json])
+            stdout = self.runner.run_generate_d([p_list_json, str(positive_errors), str(negative_errors)])
             data = json.loads(stdout)
 
             if data["status"] == "success":
