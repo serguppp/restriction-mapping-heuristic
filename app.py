@@ -1,14 +1,7 @@
 import streamlit as st
-import subprocess
-import json
-import time
 from components.button import RunnerButton, Button
 from components.runner import CppRunner
 from components.config import Config
-
-
-def map_list_to_string(string):
-    return  ", ".join(map(str, string))
 
 CPP_EXE_PATH = "./src/main"
 
@@ -16,12 +9,13 @@ CPP_EXE_PATH = "./src/main"
 st.set_page_config(page_title="Restriction Mapping Heuristics", layout="wide")
 st.title("Restriction Mapping Heuristics")
 
+# I/O
+
 config = Config.get()
 for key, value in config.items():
     if key not in st.session_state:
         st.session_state[key] = value
 
-# I/O
 if "p_points" not in st.session_state:
     st.session_state.p_points = ""
 if "d_distances" not in st.session_state:
@@ -33,6 +27,7 @@ if "output_m_value" not in st.session_state:
 if "success_msg" not in st.session_state:
     st.session_state.success_msg = ""
 
+# UI 
 col1, col2, col3 = st.columns([1,1,1])
 
 with col2:
@@ -76,7 +71,7 @@ st.text_area(
 button = Button()
 runner = CppRunner(CPP_EXE_PATH)
 runner_button = RunnerButton(runner)
-# UI
+
 with col1:
     st.subheader("Input Parameters")
     col1_1, col2_2 = st.columns(2)
@@ -93,6 +88,7 @@ with col1:
     
     button.render_reset_params()
     
+
     st.header("Actions")
 
     sb_col1, sb_col2, sb_col3 = st.columns([1.5,1.5,1])
