@@ -13,5 +13,7 @@
     ],
     "code-runner.executorMap": {
         "cpp": "cd $dir && g++ -std=c++20 *.cpp -o $fileNameWithoutExt && $dir$fileNameWithoutExt"
-    }
+    },
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.typeCheckingMode": "standard"
 }

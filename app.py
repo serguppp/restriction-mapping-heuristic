@@ -2,8 +2,10 @@ import streamlit as st
 import subprocess
 import json
 import time
-from components.button import Button
+from components.button import RunnerButton, Button
 from components.runner import CppRunner
+from components.config import Config
+
 
 def map_list_to_string(string):
     return  ", ".join(map(str, string))
@@ -14,29 +16,20 @@ CPP_EXE_PATH = "./src/main"
 st.set_page_config(page_title="Restriction Mapping Heuristics", layout="wide")
 st.title("Restriction Mapping Heuristics")
 
-# P and D I/O
+config = Config.get()
+for key, value in config.items():
+    if key not in st.session_state:
+        st.session_state[key] = value
+
+# I/O
 if "p_points" not in st.session_state:
     st.session_state.p_points = ""
 if "d_distances" not in st.session_state:
     st.session_state.d_distances = ""
 if "p_result" not in st.session_state:
     st.session_state.p_result = ""
-
-# Algorithm Parameters
-if "m_value" not in st.session_state:
-    st.session_state.m_value = ""
-if "population_size" not in st.session_state:
-    st.session_state.population_size = ""
-if "mutation_rate" not in st.session_state:
-    st.session_state.mutation_rate = ""
-if "crossover_rate" not in st.session_state:
-    st.session_state.crossover_rate = ""
-if "elite_rate" not in st.session_state:
-    st.session_state.elite_rate = ""
-if "max_generations" not in st.session_state:
-    st.session_state.max_generations = ""
-if "tournament_size" not in st.session_state:
-    st.session_state.tournament_size = ""
+if "output_m_value" not in st.session_state:
+    st.session_state.output_m_value = ""
 if "success_msg" not in st.session_state:
     st.session_state.success_msg = ""
 
@@ -69,8 +62,8 @@ status_text = st.empty()
 
 st.subheader("Results")
 
-if st.session_state.m_value != "":
-    st.metric(label="Found P Size (m)", value=st.session_state.m_value)
+if st.session_state.output_m_value != "":
+    st.metric(label="Found P Size (m)", value=st.session_state.output_m_value)
     
 p_res = st.session_state.p_result if st.session_state.p_result else ""
 st.text_area(
@@ -80,31 +73,36 @@ st.text_area(
     disabled=True
 )
 
+button = Button()
 runner = CppRunner(CPP_EXE_PATH)
-button = Button(runner)
-
+runner_button = RunnerButton(runner)
 # UI
 with col1:
     st.subheader("Input Parameters")
     col1_1, col2_2 = st.columns(2)
     with col1_1:
-        m = st.number_input("P size", min_value=1, max_value=100, value=10)
-        max_value = st.number_input("Max Distance Value", min_value=1, max_value=1000, value=100)
-        population_size = st.number_input("Population Size", min_value=1, max_value=1000, value=100)
-        mutation_rate = st.number_input("Mutation Rate", min_value=0.01, max_value=1.0, value=0.05)
+        m = st.number_input("P size", min_value=1, max_value=100, key = "m")
+        max_value = st.number_input("Max Distance Value", min_value=1, max_value=1000, key = "max_value")
+        population_size = st.number_input("Population Size", min_value=1, max_value=1000,  key = "population_size")
+        mutation_rate = st.number_input("Mutation Rate", min_value=0.01, max_value=1.0, key = "mutation_rate")
     with col2_2:
-        crossover_rate = st.number_input("Crossover Rate", min_value=0.01, max_value=1.0, value=0.8)
-        elite_rate = st.number_input("Elite Rate", min_value=0.01, max_value=1.0, value=0.1)
-        max_generations = st.number_input("Max Generations", min_value=1, max_value=10000, value=100)
-        tournament_size = st.number_input("Tournament Size", min_value=1, max_value=100, value=5)
+        crossover_rate = st.number_input("Crossover Rate", min_value=0.01, max_value=1.0, key = "crossover_rate")
+        elite_rate = st.number_input("Elite Rate", min_value=0.01, max_value=1.0, key = "elite_rate")
+        max_generations = st.number_input("Max Generations", min_value=1, max_value=10000, key = "max_generations")
+        tournament_size = st.number_input("Tournament Size", min_value=1, max_value=100, key = "tournament_size")
+    
+    button.render_reset_params()
     
     st.header("Actions")
 
     sb_col1, sb_col2, sb_col3 = st.columns([1.5,1.5,1])
     with sb_col1:
-        button.render_generate_p_and_d(m, max_value)
+        runner_button.render_generate_p_and_d(m, max_value)
     with sb_col2:
-        button.render_generate_d(st.session_state.p_points)
+        runner_button.render_generate_d(st.session_state.p_points)
     with sb_col3:
-        button.render_run_heuristics(p_text_area, d_text_area, population_size, mutation_rate, crossover_rate, elite_rate, max_generations, tournament_size, status_text)
+        runner_button.render_run_heuristics(p_text_area, d_text_area, population_size, mutation_rate, crossover_rate, elite_rate, max_generations, tournament_size, status_text)
+
+
+
 
