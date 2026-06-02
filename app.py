@@ -1,5 +1,5 @@
 import streamlit as st
-from components.button import RunnerButton, Button
+from components.event import ResetParamsEvent, SetDEvent, SetPDEvent, RunHeuristicsEvent
 from components.runner import CppRunner
 from components.config import Config
 from collections import Counter
@@ -64,17 +64,21 @@ with tab_config:
             height=150
         )
 
-    button = Button()
     runner = CppRunner(CPP_EXE_PATH)
-    runner_button = RunnerButton(runner)
 
     with col2:
-        button.render_reset_params()
+        reset_params_event = ResetParamsEvent()
+        st.button("Reset Params", on_click=reset_params_event.reset_params)
+
         sb_col1, sb_col2, sb_col3 = st.columns([1.5,1.5,1])
         with sb_col1:
-            runner_button.render_generate_p_and_d(m, max_value, st.session_state.positive_errors, st.session_state.negative_errors)
+            if st.button("Set P,D", use_container_width=True):
+                p_d_event = SetPDEvent(runner)
+                p_d_event.run(m, max_value, st.session_state.positive_errors, st.session_state.negative_errors)
         with sb_col2:
-            runner_button.render_generate_d(st.session_state.p_points, st.session_state.positive_errors, st.session_state.negative_errors)
+            if st.button("Set D", use_container_width=True):
+                d_event = SetDEvent(runner)
+                d_event.run(st.session_state.p_points, st.session_state.positive_errors, st.session_state.negative_errors)
 
 with tab_results:
     col1, col2 = st.columns([1,1])
@@ -97,8 +101,9 @@ with tab_results:
             disabled=True
         )
 
-    runner_button.render_run_heuristics(p_text_area, d_text_area, population_size, mutation_rate, crossover_rate, elite_rate, max_generations, tournament_size, status_text)
-
+    if st.button("Run", type="primary"):
+        h_event = RunHeuristicsEvent(runner)
+        h_event.run(p_text_area, d_text_area, population_size, mutation_rate, crossover_rate, elite_rate, max_generations, tournament_size, status_text)
 
     if st.session_state.success_msg: 
         st.success(st.session_state.success_msg)
