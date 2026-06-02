@@ -1,3 +1,5 @@
+import streamlit as st
+
 class Config():
     @staticmethod
     def get():
@@ -13,3 +15,9 @@ class Config():
             "positive_errors": 0,
             "negative_errors": 0
         }
+    
+    @staticmethod
+    def update():
+        for key, value in Config.get().items():
+            if key not in st.session_state:
+                st.session_state[key] = value
