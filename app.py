@@ -1,16 +1,15 @@
 import streamlit as st
-from components.event import ResetParamsEvent, SetDEvent, SetPDEvent, HeuristicEvents
+from components.events import SetDEvent, SetPDEvent, HeuristicEvents
+from components.processes import ProcessManager
 from components.runner import CppRunner
 from components.config import Config
-from collections import Counter
-from components.types import States
-import time
-import psutil
-import re
-import json
+from components.types import States, map_list_to_string
 
-def map_list_to_string(list) -> str:
-    return  ", ".join(map(str, list))
+from dataclasses import asdict
+
+def reset_params() -> None:
+    st.session_state.update(asdict(Config()))
+    
 CPP_EXE_PATH = "./src/main"
 
 # Page settings
@@ -36,8 +35,6 @@ if "output_generation_value" not in st.session_state:
 
 if "run_state" not in st.session_state:
     st.session_state.run_state = States.IDLE.value
-if "log_buffer" not in st.session_state:
-    st.session_state.log_buffer = ""
 if "stderr_queue" not in st.session_state:
     st.session_state.stderr_queue = None
 if "process" not in st.session_state:
@@ -83,20 +80,19 @@ with tab_config:
         )
 
     runner = CppRunner(CPP_EXE_PATH)
-    heuristics= HeuristicEvents(runner)
+    
     with col2:
-        reset_params_event = ResetParamsEvent()
-        st.button("Reset Params", on_click=reset_params_event.reset_params)
+        st.button("Reset Params", on_click=reset_params)
 
         sb_col1, sb_col2, sb_col3 = st.columns([1.5,1.5,1])
         with sb_col1:
             if st.button("Set P,D", use_container_width=True):
-                p_d_event = SetPDEvent(runner)
-                p_d_event.run(m, max_value, st.session_state.positive_errors, st.session_state.negative_errors)
+                p_d_event = SetPDEvent(runner, m, max_value, st.session_state.positive_errors, st.session_state.negative_errors)
+                p_d_event.run_and_proceed()
         with sb_col2:
             if st.button("Set D", use_container_width=True):
-                d_event = SetDEvent(runner)
-                d_event.run(st.session_state.p_points, st.session_state.positive_errors, st.session_state.negative_errors)
+                d_event = SetDEvent(runner, st.session_state.p_points, st.session_state.positive_errors, st.session_state.negative_errors)
+                d_event.run_and_proceed()
 
 with tab_results:
     col1, col2 = st.columns([1,1])
@@ -107,27 +103,28 @@ with tab_results:
         with ctrl_col1:
             if st.session_state.run_state == States.IDLE.value:
                 if st.button("Run", type="primary", use_container_width=True):
-                    heuristics.run(p_text_area, d_text_area, population_size, mutation_rate, crossover_rate, elite_rate, max_generations, tournament_size)
+                    heuristics_event = HeuristicEvents(runner, p_text_area, d_text_area, population_size, mutation_rate, crossover_rate, elite_rate, max_generations, tournament_size)
+                    heuristics_event.run_and_proceed()
             else:
                 st.button("Run", disabled=True, use_container_width=True)
 
         with ctrl_col2:
             if st.session_state.run_state == States.RUNNING.value:
                  if st.button("Pause", use_container_width=True):
-                     heuristics.pause()
+                    ProcessManager.pause()
             elif st.session_state.run_state == States.PAUSED.value:
                 if st.button("Resume", use_container_width=True):
-                    heuristics.resume()
+                    ProcessManager.resume()
             else:
                 st.button("Pause", disabled=True, use_container_width=True)
         
         with ctrl_col3:
             if st.session_state.run_state in [States.RUNNING.value, States.PAUSED.value]:
                 if st.button("Stop", type="primary", use_container_width=True):
-                    heuristics.stop()
+                    ProcessManager.stop()
             else:
                  st.button("Stop", disabled=True, use_container_width=True)
-                 
+
         if st.session_state.success_msg: 
             st.success(st.session_state.success_msg)
             st.session_state.success_msg = ""
@@ -145,39 +142,4 @@ with tab_results:
         )
 
 
-if st.session_state.run_state == States.RUNNING.value and st.session_state.process:
-    process = st.session_state.process
-    q = st.session_state.stderr_queue
-    
-    poll = process.poll()
-    
-    new_data = False
-    latest_line = ""
-    while q and not q.empty():
-        line = q.get_nowait()
-        if line.strip():
-            latest_line = line
-            new_data = True
-        
-        match = re.search(r"Generation (\d+).*P size\s*=\s*(\d+),\s*Best P\s*=\s*([\d,]+)", line)
-        if match:
-            st.session_state.output_generation_value = int(match.group(1))
-            st.session_state.output_m_value = int(match.group(2))
-            st.session_state.p_result = ", ".join(match.group(3).split(","))
-        
-    if poll is not None:
-        st.session_state.run_state = States.IDLE.value
-        
-        stdout_data, _ = process.communicate()
-        if stdout_data:
-            try:
-                data = json.loads(stdout_data)
-                if data["status"] == "success":
-                    st.session_state.output_m_value = data["m_value"]
-                    st.session_state.p_result = map_list_to_string(data["p_result"])
-                    st.session_state.success_msg = "Algorithm finished successfully!"
-            except Exception as e:
-                st.error(f"Error reading result: {e}")
-    else:
-        time.sleep(0.01)
-    st.rerun()
+ProcessManager.update()
