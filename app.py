@@ -1,18 +1,20 @@
+from dataclasses import asdict
+
 import streamlit as st
-from components.events import SetDEvent, SetPDEvent, HeuristicEvents
+
+from components.config import Config
+from components.events import HeuristicEvents, SetDEvent, SetPDEvent
 from components.processes import ProcessManager
 from components.runner import CppRunner
-from components.config import Config
 from components.types import States
-
-from dataclasses import asdict
 
 
 def reset_params() -> None:
-    st.session_state.update(asdict(Config()))
+    st.session_state.update(asdict(Config()))  # type: ignore
 
 
 CPP_EXE_PATH = "./src/main"
+runner = CppRunner(CPP_EXE_PATH)
 
 # Page settings
 st.set_page_config(page_title="Restriction Mapping Heuristics", layout="wide")
@@ -44,7 +46,6 @@ if "process" not in st.session_state:
 
 # I/O
 with tab_config:
-    # UI
     col1, col2, col3 = st.columns([1, 1, 1])
 
     with col1:
@@ -94,8 +95,6 @@ with tab_config:
         d_text_area = st.text_area(
             label="Generated D Distances", value=d_distances, height=150
         )
-
-    runner = CppRunner(CPP_EXE_PATH)
 
     with col2:
         st.button("Reset Params", on_click=reset_params)

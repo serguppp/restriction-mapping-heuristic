@@ -15,5 +15,12 @@
         "cpp": "cd $dir && g++ -std=c++20 *.cpp -o $fileNameWithoutExt && $dir$fileNameWithoutExt"
     },
     "python.analysis.autoImportCompletions": true,
-    "python.analysis.typeCheckingMode": "standard"
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.codeActionsOnSave": {
+            "source.fixAll.ruff": "explicit",
+            "source.organizeImports.ruff": "explicit"
+        }
+    }
 }
