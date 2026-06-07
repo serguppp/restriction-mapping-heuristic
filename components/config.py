@@ -1,6 +1,7 @@
 import streamlit as st
 from dataclasses import dataclass, asdict
 
+
 @dataclass
 class Config:
     m: int = 10
@@ -13,7 +14,7 @@ class Config:
     tournament_size: int = 5
     positive_errors: int = 0
     negative_errors: int = 0
-    
+
     @classmethod
     def update(cls) -> None:
         default_config = asdict(cls())

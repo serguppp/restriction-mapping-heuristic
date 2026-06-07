@@ -9,3 +9,13 @@ repos:
       - id: clang-tidy
         args: [--extra-arg=-std=c++20, --extra-arg-before=-xc++]
         exclude: ^include/external/
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.16
+    hooks:
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v2.1.0
+    hooks:
+      - id: mypy
