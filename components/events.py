@@ -1,11 +1,13 @@
-from abc import ABC, abstractmethod
-import streamlit as st
 import json
-import threading
 import queue
-from components.runner import CppRunner
-from components.types import States, map_list_to_string, map_text_to_list, dump_json
+import threading
+from abc import ABC, abstractmethod
 from typing import IO, Any
+
+import streamlit as st
+
+from components.runner import CppRunner
+from components.types import States, dump_json, map_list_to_string, map_text_to_list
 
 
 def enqueue_output(output: IO[str], q: queue.Queue) -> None:
@@ -167,5 +169,6 @@ class HeuristicEvents(Event):
 
             thread.daemon = True
             thread.start()
+            st.rerun()
         except Exception as e:
             st.error(f"Error starting heuristics: {e}")

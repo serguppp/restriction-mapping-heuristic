@@ -1,11 +1,12 @@
-import streamlit as st
-import psutil
-from components.types import States, map_list_to_string
 import json
-import time
 import re
-
 import signal
+import time
+
+import psutil
+import streamlit as st
+
+from components.types import States, map_list_to_string
 
 
 class ProcessManager:
@@ -65,29 +66,28 @@ class ProcessManager:
         while q and not q.empty():
             line = q.get_nowait()
             match = re.search(
-                r"Generation (\d+).*P size\s*=\s*(\d+),\s*Best P\s*=\s*([\d,]+)", line
+                r"Generation (\d+).*P size\s*=\s*(\d+),\s*Best P\s*=\s*([\d,]+)",
+                line,
             )
             if match:
-                st.session_state.output_generation_value = int(match.group(1))
+                st.session_state.output_generation_value = int(match.group(1)) + 1
                 st.session_state.output_m_value = int(match.group(2))
                 st.session_state.p_result = ", ".join(match.group(3).split(","))
 
         poll = process.poll()
         if poll is not None:
             st.session_state.run_state = States.IDLE.value
-
-            stdout_data, _ = process.communicate()
-            if stdout_data:
-                try:
-                    data = json.loads(stdout_data)
-                    if data["status"] == "success":
-                        st.session_state.output_m_value = data["m_value"]
-                        st.session_state.p_result = map_list_to_string(data["p_result"])
-                        st.session_state.success_msg = (
-                            "Algorithm finished successfully!"
-                        )
-                except Exception as e:
-                    st.error(f"Error reading result: {e}")
+            try:
+                stdout_data, _ = process.communicate()
+                data = json.loads(stdout_data)
+                if data["status"] == "success":
+                    st.session_state.output_m_value = data["m_value"]
+                    st.session_state.p_result = map_list_to_string(data["p_result"])
+                    st.session_state.success_msg = "Algorithm finished successfully!"
+            except Exception as e:
+                st.error(f"Error reading result: {e}")
+            st.session_state.process = None  # type: ignore
+            st.rerun()
         else:
-            time.sleep(0.1)
+            time.sleep(0.01)
             st.rerun()
