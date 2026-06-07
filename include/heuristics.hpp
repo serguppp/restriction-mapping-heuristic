@@ -19,7 +19,7 @@ struct Config {
     int MAX_GENERATIONS;
     int TOURNAMENT_SIZE;
 
-    Config() : POPULATION_SIZE(100), MUTATION_RATE(0.05), CROSSOVER_RATE(0.8), ELITE_RATE(0.1), MAX_GENERATIONS(1000), TOURNAMENT_SIZE(5) {}
+    Config() : POPULATION_SIZE(100), MUTATION_RATE(0.05), CROSSOVER_RATE(0.8), ELITE_RATE(0.1), MAX_GENERATIONS(1000), TOURNAMENT_SIZE(5) {}  // move it to cpp
     Config(const Parameters& p) : Config() {
         POPULATION_SIZE = p.population_size;
         MUTATION_RATE = p.mutation_rate;

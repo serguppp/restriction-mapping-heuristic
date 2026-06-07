@@ -1,9 +1,16 @@
 import streamlit as st
-from components.event import ResetParamsEvent, SetDEvent, SetPDEvent, RunHeuristicsEvent
+from components.event import ResetParamsEvent, SetDEvent, SetPDEvent, HeuristicEvents
 from components.runner import CppRunner
 from components.config import Config
 from collections import Counter
+from components.types import States
+import time
+import psutil
+import re
+import json
 
+def map_list_to_string(list) -> str:
+    return  ", ".join(map(str, list))
 CPP_EXE_PATH = "./src/main"
 
 # Page settings
@@ -11,24 +18,35 @@ st.set_page_config(page_title="Restriction Mapping Heuristics", layout="wide")
 st.header("Restriction Mapping Heuristics")
 tab_config, tab_results = st.tabs(["Instance", "Results"])
 
+Config.update()
+
+if "p_points" not in st.session_state:
+    st.session_state.p_points = ""
+if "d_distances" not in st.session_state:
+    st.session_state.d_distances = ""
+
+if "p_result" not in st.session_state:
+    st.session_state.p_result = ""
+if "output_m_value" not in st.session_state:
+    st.session_state.output_m_value = ""
+if "success_msg" not in st.session_state:
+    st.session_state.success_msg = ""
+if "output_generation_value" not in st.session_state:
+    st.session_state.output_generation_value = ""
+
+if "run_state" not in st.session_state:
+    st.session_state.run_state = States.IDLE.value
+if "log_buffer" not in st.session_state:
+    st.session_state.log_buffer = ""
+if "stderr_queue" not in st.session_state:
+    st.session_state.stderr_queue = None
+if "process" not in st.session_state:
+    st.session_state.process = None
+
 # I/O
 with tab_config:
-    Config.update()
-
-    if "p_points" not in st.session_state:
-        st.session_state.p_points = ""
-    if "d_distances" not in st.session_state:
-        st.session_state.d_distances = ""
-    if "p_result" not in st.session_state:
-        st.session_state.p_result = ""
-    if "output_m_value" not in st.session_state:
-        st.session_state.output_m_value = ""
-    if "success_msg" not in st.session_state:
-        st.session_state.success_msg = ""
-
     # UI 
     col1, col2, col3 = st.columns([1,1,1])
-
 
     with col1:
         st.subheader("Input Parameters")
@@ -65,7 +83,7 @@ with tab_config:
         )
 
     runner = CppRunner(CPP_EXE_PATH)
-
+    heuristics= HeuristicEvents(runner)
     with col2:
         reset_params_event = ResetParamsEvent()
         st.button("Reset Params", on_click=reset_params_event.reset_params)
@@ -87,25 +105,85 @@ with tab_results:
         st.subheader("Algorithm Progress")
         status_text = st.empty()
 
+        if st.session_state.log_buffer:
+            status_text.code(st.session_state.log_buffer, language="text")
+
+        ctrl_col1, ctrl_col2, ctrl_col3 = st.columns(3)
+        with ctrl_col1:
+            if st.session_state.run_state == States.IDLE.value:
+                if st.button("Run", type="primary", use_container_width=True):
+                    heuristics.run(p_text_area, d_text_area, population_size, mutation_rate, crossover_rate, elite_rate, max_generations, tournament_size, status_text)
+            else:
+                st.button("Run", disabled=True, use_container_width=True)
+
+        with ctrl_col2:
+            if st.session_state.run_state == States.RUNNING.value:
+                 if st.button("Pause", use_container_width=True):
+                     heuristics.pause()
+            elif st.session_state.run_state == States.PAUSED.value:
+                if st.button("Resume", use_container_width=True):
+                    heuristics.resume()
+            else:
+                st.button("Pause", disabled=True, use_container_width=True)
+        
+        with ctrl_col3:
+            if st.session_state.run_state in [States.RUNNING.value, States.PAUSED.value]:
+                if st.button("Stop", type="primary", use_container_width=True):
+                    heuristics.stop()
+            else:
+                 st.button("Stop", disabled=True, use_container_width=True)
+
     with col2:
         st.subheader("Results")
-
-        if st.session_state.output_m_value != "":
-            st.metric(label="Found P Size (m)", value=st.session_state.output_m_value)
-            
-        p_res = st.session_state.p_result if st.session_state.p_result else ""
+        st.metric(label="Generation", value = st.session_state.output_generation_value)
+        st.metric(label="Found P Size (m)", value=st.session_state.output_m_value)
         st.text_area(
             label="Result P Points",
-            value=p_res,
+            value=st.session_state.p_result,
             height=150,
             disabled=True
         )
 
-    if st.button("Run", type="primary"):
-        h_event = RunHeuristicsEvent(runner)
-        h_event.run(p_text_area, d_text_area, population_size, mutation_rate, crossover_rate, elite_rate, max_generations, tournament_size, status_text)
+if st.session_state.success_msg: 
+    st.success(st.session_state.success_msg)
+    st.session_state.success_msg = ""
 
-    if st.session_state.success_msg: 
-        st.success(st.session_state.success_msg)
-        st.session_state.success_msg = ""
-
+if st.session_state.run_state == States.RUNNING.value and st.session_state.process:
+    process = st.session_state.process
+    q = st.session_state.stderr_queue
+    
+    poll = process.poll()
+    
+    new_data = False
+    latest_line = ""
+    while q and not q.empty():
+        line = q.get_nowait()
+        if line.strip():
+            latest_line = line
+            new_data = True
+        
+        match = re.search(r"Generation (\d+).*P size\s*=\s*(\d+),\s*Best P\s*=\s*([\d,]+)", line)
+        if match:
+            st.session_state.output_generation_value = int(match.group(1))
+            st.session_state.output_m_value = int(match.group(2))
+            st.session_state.p_result = ", ".join(match.group(3).split(","))
+    if new_data:
+        st.session_state.log_buffer = latest_line.strip()
+        status_text.code(st.session_state.log_buffer, language="text")
+        
+    if poll is not None:
+        st.session_state.run_state = States.IDLE.value
+        
+        stdout_data, _ = process.communicate()
+        if stdout_data:
+            try:
+                data = json.loads(stdout_data)
+                if data["status"] == "success":
+                    st.session_state.output_m_value = data["m_value"]
+                    st.session_state.p_result = map_list_to_string(data["p_result"])
+                    st.session_state.success_msg = "Algorithm finished successfully!"
+            except Exception as e:
+                st.error(f"Error reading result: {e}")
+    else:
+        time.sleep(0.01)
+    st.rerun()

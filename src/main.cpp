@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <atomic>
+#include <csignal>
 #include <iostream>
 #include <random>
 #include <string>
@@ -10,6 +12,13 @@
 #include "../include/parameters.hpp"
 
 using json = nlohmann::json;
+
+std::atomic<bool> stop(false);
+void signal_handler(int signal) {
+    if (signal == SIGINT) {
+        stop = true;
+    }
+}
 
 // 0 - Generowanie P i D
 // 1 - Generowanie D na podstawie P
@@ -56,6 +65,7 @@ Parameters parse_arguments(int argc, char** argv) {
                     << "\n";
                 throw std::runtime_error("Invalid arguments");
             }
+            std::signal(SIGINT, signal_handler);
             params.flag = ExecutionMode::RUN_HEURISTICS;
             params.p_vector = json::parse(argv[2]).get<std::vector<int>>();
             params.d_vector = json::parse(argv[3]).get<std::vector<int>>();

@@ -1,5 +1,10 @@
 #include "../include/heuristics.hpp"
 
+#include <atomic>
+#include <csignal>
+
+extern std::atomic<bool> stop;
+
 GeneticAlgorithm::GeneticAlgorithm(Config& cfg, std::mt19937& g, const std::vector<int>& d) : config(cfg), gen(g), D(d) {
     std::ranges::sort(D);
     C = set_candidates();
@@ -157,13 +162,21 @@ std::pair<int, std::vector<int>> GeneticAlgorithm::run() {
     int generation = 0;
     Individual best_individual = population[0];
     while (generation < config.MAX_GENERATIONS) {
+        if (stop) {
+            std::cerr << "Algorithm stopped by user \n";
+            break;
+        }
         std::ranges::sort(population, [](const Individual& a, const Individual& b) { return a.fitness > b.fitness; });
 
         if (population[0].fitness > best_individual.fitness) {
             best_individual = population[0];
         }
 
-        std::cerr << "Generation " << generation << ": Best fitness = " << best_individual.fitness << ", P size = " << best_individual.P.size() << "\n";
+        std::cerr << "Generation " << generation << ": Fitness = " << best_individual.fitness << ", P size = " << best_individual.P.size() << ", Best P = ";
+        for (size_t i = 0; i < best_individual.P.size(); i++) {
+            std::cerr << best_individual.P[i] << (i == best_individual.P.size() - 1 ? "" : ",");
+        }
+        std::cerr << "\n";
 
         std::vector<Individual> new_population;
         new_population.reserve(config.POPULATION_SIZE);
