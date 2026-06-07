@@ -59,7 +59,7 @@ class SetPDEvent(Event):
 
 class HeuristicEvents(Event):
     def run(self, p_text_area:str, d_text_area:str, population_size: int, mutation_rate: float, crossover_rate: float,
-                              elite_rate: float, max_generations: int, tournament_size: int, status_text) -> None:
+                              elite_rate: float, max_generations: int, tournament_size: int) -> None:
         if not p_text_area.strip() or not d_text_area.strip():
             st.warning("P or D vector is empty")
             return

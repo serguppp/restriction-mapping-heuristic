@@ -102,17 +102,12 @@ with tab_results:
     col1, col2 = st.columns([1,1])
 
     with col1:
-        st.subheader("Algorithm Progress")
-        status_text = st.empty()
-
-        if st.session_state.log_buffer:
-            status_text.code(st.session_state.log_buffer, language="text")
 
         ctrl_col1, ctrl_col2, ctrl_col3 = st.columns(3)
         with ctrl_col1:
             if st.session_state.run_state == States.IDLE.value:
                 if st.button("Run", type="primary", use_container_width=True):
-                    heuristics.run(p_text_area, d_text_area, population_size, mutation_rate, crossover_rate, elite_rate, max_generations, tournament_size, status_text)
+                    heuristics.run(p_text_area, d_text_area, population_size, mutation_rate, crossover_rate, elite_rate, max_generations, tournament_size)
             else:
                 st.button("Run", disabled=True, use_container_width=True)
 
@@ -132,6 +127,11 @@ with tab_results:
                     heuristics.stop()
             else:
                  st.button("Stop", disabled=True, use_container_width=True)
+                 
+        if st.session_state.success_msg: 
+            st.success(st.session_state.success_msg)
+            st.session_state.success_msg = ""
+
 
     with col2:
         st.subheader("Results")
@@ -144,9 +144,6 @@ with tab_results:
             disabled=True
         )
 
-if st.session_state.success_msg: 
-    st.success(st.session_state.success_msg)
-    st.session_state.success_msg = ""
 
 if st.session_state.run_state == States.RUNNING.value and st.session_state.process:
     process = st.session_state.process
@@ -167,9 +164,6 @@ if st.session_state.run_state == States.RUNNING.value and st.session_state.proce
             st.session_state.output_generation_value = int(match.group(1))
             st.session_state.output_m_value = int(match.group(2))
             st.session_state.p_result = ", ".join(match.group(3).split(","))
-    if new_data:
-        st.session_state.log_buffer = latest_line.strip()
-        status_text.code(st.session_state.log_buffer, language="text")
         
     if poll is not None:
         st.session_state.run_state = States.IDLE.value
