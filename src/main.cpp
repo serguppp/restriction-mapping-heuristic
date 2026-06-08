@@ -1,8 +1,7 @@
-#include <algorithm>
 #include <atomic>
+#include <chrono>
 #include <csignal>
 #include <iostream>
-#include <random>
 #include <string>
 #include <vector>
 
@@ -14,6 +13,7 @@
 using json = nlohmann::json;
 
 std::atomic<bool> stop(false);
+
 void signal_handler(int signal) {
     if (signal == SIGINT) {
         stop = true;

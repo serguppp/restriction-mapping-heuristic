@@ -1,7 +1,10 @@
 #include "../include/heuristics.hpp"
 
+#include <algorithm>
 #include <atomic>
 #include <csignal>
+#include <iostream>
+#include <set>
 
 extern std::atomic<bool> stop;
 

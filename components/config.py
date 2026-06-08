@@ -1,5 +1,6 @@
+from dataclasses import asdict, dataclass
+
 import streamlit as st
-from dataclasses import dataclass, asdict
 
 
 @dataclass

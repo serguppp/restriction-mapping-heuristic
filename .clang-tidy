@@ -10,9 +10,9 @@ Checks: >
   -readability-braces-around-statements,
   -bugprone-easily-swappable-parameters,
   -performance-enum-size
-
+  
 WarningsAsErrors: "bugprone-*,performance-*"
-HeaderFilterRegex: '.*'
+HeaderFilterRegex: '^(src|include)/'
 ExcludeHeaderFilterRegex: 'include/external/.*'
 CheckOptions:
   - key: readability-identifier-naming.ClassCase
@@ -23,4 +23,5 @@ CheckOptions:
     value: UPPER_CASE
   - key: readability-identifier-naming.FunctionCase
     value: lower_case
+    
 ---

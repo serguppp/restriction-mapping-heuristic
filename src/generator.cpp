@@ -1,5 +1,9 @@
 #include "../include/generator.hpp"
 
+#include <algorithm>
+#include <random>
+#include <stdexcept>
+
 std::mt19937& get_gen() {
     static std::mt19937 gen(std::random_device{}());
     return gen;

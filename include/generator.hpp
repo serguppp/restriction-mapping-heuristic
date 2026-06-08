@@ -1,9 +1,6 @@
 #pragma once
 
-#include <algorithm>
-#include <iostream>
 #include <random>
-#include <ranges>
 #include <vector>
 
 std::vector<int> generate_p(int m, int max_value);

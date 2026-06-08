@@ -1,5 +1,4 @@
 #pragma once
-#include <string>
 #include <vector>
 
 enum class ExecutionMode { DEFAULT = 0, GENERATE_D = 1, RUN_HEURISTICS = 2 };
