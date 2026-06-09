@@ -38,11 +38,12 @@ if "output_generation_value" not in st.session_state:
     st.session_state.output_generation_value = ""
 
 if "run_state" not in st.session_state:
-    st.session_state.run_state = States.IDLE.value
+    st.session_state.run_state = States.IDLE
 if "stderr_queue" not in st.session_state:
     st.session_state.stderr_queue = None
-if "process" not in st.session_state:
-    st.session_state.process = None
+if "process_manager" not in st.session_state:
+    st.session_state.process_manager = ProcessManager()
+
 
 # I/O
 with tab_config:
@@ -126,7 +127,7 @@ with tab_results:
     with col1:
         ctrl_col1, ctrl_col2, ctrl_col3 = st.columns(3)
         with ctrl_col1:
-            if st.session_state.run_state == States.IDLE.value:
+            if st.session_state.run_state == States.IDLE:
                 if st.button("Run", type="primary", use_container_width=True):
                     heuristics_event = HeuristicEvents(
                         runner,
@@ -144,22 +145,22 @@ with tab_results:
                 st.button("Run", disabled=True, use_container_width=True)
 
         with ctrl_col2:
-            if st.session_state.run_state == States.RUNNING.value:
+            if st.session_state.run_state == States.RUNNING:
                 if st.button("Pause", use_container_width=True):
-                    ProcessManager.pause()
-            elif st.session_state.run_state == States.PAUSED.value:
+                    st.session_state.process_manager.pause()
+            elif st.session_state.run_state == States.PAUSED:
                 if st.button("Resume", use_container_width=True):
-                    ProcessManager.resume()
+                    st.session_state.process_manager.resume()
             else:
                 st.button("Pause", disabled=True, use_container_width=True)
 
         with ctrl_col3:
             if st.session_state.run_state in [
-                States.RUNNING.value,
-                States.PAUSED.value,
+                States.RUNNING,
+                States.PAUSED,
             ]:
                 if st.button("Stop", type="primary", use_container_width=True):
-                    ProcessManager.stop()
+                    st.session_state.process_manager.stop()
             else:
                 st.button("Stop", disabled=True, use_container_width=True)
 
@@ -179,4 +180,4 @@ with tab_results:
         )
 
 
-ProcessManager.update()
+st.session_state.process_manager.update()

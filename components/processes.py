@@ -2,6 +2,7 @@ import json
 import re
 import signal
 import time
+from subprocess import Popen
 
 import psutil
 import streamlit as st
@@ -10,57 +11,41 @@ from components.types import States, map_list_to_string
 
 
 class ProcessManager:
-    @staticmethod
-    def pause() -> None:
-        if st.session_state.process:
-            process = psutil.Process(st.session_state.process.pid)
-            process.suspend()
-            st.session_state.run_state = States.PAUSED.value
-            st.session_state.success_msg = "Algorithm paused"
+    def __init__(self, process: Popen | None = None):
+        self.process = process
+
+    def handle(self, run_state: States, message: str) -> None:
+        if self.process is not None:
+            psutil_process = psutil.Process(self.process.pid)
+            if run_state == States.PAUSED:
+                psutil_process.suspend()
+            elif run_state == States.RUNNING:
+                psutil_process.resume()
+            elif run_state == States.IDLE:
+                if st.session_state.run_state == States.PAUSED:
+                    psutil_process.resume()
+
+                psutil_process.send_signal(signal.SIGINT)
+                try:
+                    psutil_process.wait(timeout=2)
+                except Exception:
+                    self.process.kill()
+
+                try:
+                    if self.process is not None:
+                        if self.process.stdout is not None:
+                            self.process.stdout.close()
+                        if self.process.stderr is not None:
+                            self.process.stderr.close()
+                except Exception:
+                    pass
+                self.process = None
+
+        st.session_state.success_msg = message
+        st.session_state.run_state = run_state
         st.rerun()
 
-    @staticmethod
-    def resume() -> None:
-        if st.session_state.process:
-            process = psutil.Process(st.session_state.process.pid)
-            process.resume()
-            st.session_state.run_state = States.RUNNING.value
-            st.session_state.success_msg = "Algorithm resumed"
-        st.rerun()
-
-    @staticmethod
-    def stop() -> None:
-        if st.session_state.process:
-            process = psutil.Process(st.session_state.process.pid)
-            if st.session_state.run_state == States.PAUSED.value:
-                process.resume()
-            process.send_signal(signal.SIGINT)
-            st.session_state.process.wait(timeout=2)
-
-            try:
-                stdout_data, _ = st.session_state.process.communicate()
-                if stdout_data:
-                    data = json.loads(stdout_data)
-                    if data["status"] == "success":
-                        st.session_state.output_m_value = data["m_value"]
-                        st.session_state.p_result = map_list_to_string(data["p_result"])
-            except Exception:
-                pass
-            st.session_state.process = None
-            st.session_state.log_buffer = ""
-            st.session_state.success_msg = "Algorithm stopped"
-        st.session_state.run_state = States.IDLE.value
-        st.rerun()
-
-    @staticmethod
-    def update() -> None:
-        if (
-            not st.session_state.process
-            or st.session_state.run_state != States.RUNNING.value
-        ):
-            return
-
-        process = st.session_state.process
+    def read_queue_and_update_output(self) -> None:
         q = st.session_state.stderr_queue
 
         while q and not q.empty():
@@ -69,16 +54,32 @@ class ProcessManager:
                 r"Generation (\d+).*P size\s*=\s*(\d+),\s*Best P\s*=\s*([\d,]+)",
                 line,
             )
+
             if match:
                 st.session_state.output_generation_value = int(match.group(1)) + 1
                 st.session_state.output_m_value = int(match.group(2))
                 st.session_state.p_result = ", ".join(match.group(3).split(","))
 
-        poll = process.poll()
+    def pause(self) -> None:
+        self.handle(States.PAUSED, "Algorithm paused")
+
+    def resume(self) -> None:
+        self.handle(States.RUNNING, "Algorithm resumed")
+
+    def stop(self) -> None:
+        self.handle(States.IDLE, "Algorithm stopped")
+
+    def update(self) -> None:
+        if not self.process or st.session_state.run_state != States.RUNNING:
+            return
+
+        self.read_queue_and_update_output()
+
+        poll = self.process.poll()
         if poll is not None:
-            st.session_state.run_state = States.IDLE.value
+            st.session_state.run_state = States.IDLE
             try:
-                stdout_data, _ = process.communicate()
+                stdout_data, _ = self.process.communicate()
                 data = json.loads(stdout_data)
                 if data["status"] == "success":
                     st.session_state.output_m_value = data["m_value"]
@@ -86,8 +87,8 @@ class ProcessManager:
                     st.session_state.success_msg = "Algorithm finished successfully!"
             except Exception as e:
                 st.error(f"Error reading result: {e}")
-            st.session_state.process = None  # type: ignore
+            self.process = None
             st.rerun()
         else:
-            time.sleep(0.01)
+            time.sleep(0.1)
             st.rerun()

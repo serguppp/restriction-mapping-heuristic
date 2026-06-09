@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import queue
 import threading
@@ -6,6 +8,7 @@ from typing import IO, Any
 
 import streamlit as st
 
+from components.processes import ProcessManager
 from components.runner import CppRunner
 from components.types import States, dump_json, map_list_to_string, map_text_to_list
 
@@ -157,9 +160,9 @@ class HeuristicEvents(Event):
         try:
             args = self.prepare_args()
             process = self.runner.run_heuristics(args)
+            st.session_state.process_manager = ProcessManager(process)
 
-            st.session_state.run_state = States.RUNNING.value
-            st.session_state.process = process
+            st.session_state.run_state = States.RUNNING
             st.session_state.stderr_queue = queue.Queue()
 
             thread = threading.Thread(

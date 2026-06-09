@@ -65,7 +65,6 @@ Parameters parse_arguments(int argc, char** argv) {
                     << "\n";
                 throw std::runtime_error("Invalid arguments");
             }
-            std::signal(SIGINT, signal_handler);
             params.flag = ExecutionMode::RUN_HEURISTICS;
             params.p_vector = json::parse(argv[2]).get<std::vector<int>>();
             params.d_vector = json::parse(argv[3]).get<std::vector<int>>();
@@ -97,6 +96,7 @@ json process_flags(const Parameters& params) {
             return json{{"status", "success"}, {"p_points", params.p_vector}, {"d_distances", d_vector}};
         }
         case ExecutionMode::RUN_HEURISTICS: {
+            std::signal(SIGINT, signal_handler);
             Config cfg(params);
             GeneticAlgorithm ga(cfg, get_gen(), params.d_vector);
             std::pair<int, std::vector<int>> result = ga.run();
