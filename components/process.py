@@ -8,12 +8,14 @@ from subprocess import Popen
 import psutil
 import streamlit as st
 
+from components.task_state import TaskState
 from components.types import States, map_list_to_string
 
 
 class Process:
     def __init__(
         self,
+        task_state: TaskState,
         run_state: States = States.IDLE,
         process: Popen | None = None,
         queue: queue.Queue | None = None,
@@ -21,6 +23,7 @@ class Process:
         self.process = process
         self.run_state = run_state
         self.queue = queue
+        self.task_state = task_state
 
     def set(self, process: Popen, run_state: States, queue: queue.Queue) -> None:
         self.process = process
@@ -55,7 +58,7 @@ class Process:
                 self.process = None
 
         self.run_state = run_state
-        st.session_state.success_msg = message
+        self.task_state.success_msg = message
         st.rerun()
 
     def read_queue_and_update_output(self) -> None:
@@ -69,9 +72,9 @@ class Process:
             )
 
             if match:
-                st.session_state.output_generation_value = int(match.group(1)) + 1
-                st.session_state.output_m_value = int(match.group(2))
-                st.session_state.p_result = ", ".join(match.group(3).split(","))
+                self.task_state.generation = str(int(match.group(1)) + 1)
+                self.task_state.m = match.group(2)
+                self.task_state.p_result = ", ".join(match.group(3).split(","))
 
     def read_json_and_update_output(self) -> None:
         if self.process:
@@ -79,11 +82,12 @@ class Process:
                 stdout_data, _ = self.process.communicate()
                 data = json.loads(stdout_data)
                 if data["status"] == "success":
-                    st.session_state.output_m_value = data["m_value"]
-                    st.session_state.p_result = map_list_to_string(data["p_result"])
-                    st.session_state.success_msg = "Algorithm finished successfully!"
+                    self.task_state.generation = str(data["generation"])
+                    self.task_state.m = str(data["m_value"])
+                    self.task_state.p_result = map_list_to_string(data["p_result"])
+                    self.task_state.success_msg = "Algorithm finished successfully!"
             except Exception as e:
-                st.error(f"Error reading result: {e}")        
+                st.error(f"Error reading result: {e}")
 
     def pause(self) -> None:
         self.handle(States.PAUSED, "Algorithm paused")
@@ -108,5 +112,3 @@ class Process:
         else:
             time.sleep(0.1)
             st.rerun()
-
-        

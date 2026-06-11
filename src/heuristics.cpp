@@ -161,7 +161,7 @@ void GeneticAlgorithm::mutate(Individual& ind) {
     }
 }
 
-std::pair<int, std::vector<int>> GeneticAlgorithm::run() {
+Result GeneticAlgorithm::run() {
     int generation = 0;
     Individual best_individual = population[0];
     while (generation < config.MAX_GENERATIONS) {
@@ -227,5 +227,5 @@ std::pair<int, std::vector<int>> GeneticAlgorithm::run() {
         generation++;
     }
 
-    return std::pair(best_individual.P.size(), best_individual.P);
+    return {.generation = generation, .p_size = best_individual.P.size(), .p_points = best_individual.P};
 }

@@ -99,8 +99,9 @@ json process_flags(const Parameters& params) {
             std::signal(SIGINT, signal_handler);
             Config cfg(params);
             GeneticAlgorithm ga(cfg, get_gen(), params.d_vector);
-            std::pair<int, std::vector<int>> result = ga.run();
-            return json{{"status", "success"}, {"m_value", result.first}, {"p_result", result.second}};
+            auto result = ga.run();
+
+            return json{{"status", "success"}, {"m_value", result.p_size}, {"p_result", result.p_points}, {"generation", result.generation}};
         }
         default:
             return json{{"status", "error"}, {"message", "Unknown execution mode"}};

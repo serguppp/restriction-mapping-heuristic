@@ -5,6 +5,12 @@
 
 #include "../include/parameters.hpp"
 
+struct Result {
+    int generation;
+    size_t p_size;
+    std::vector<int> p_points;
+};
+
 // MIN SUPERSET PDB - p = {p1, ..., pm} such that D = { |pi - pj| : 1 <= i < j <= m } and m is minimal
 struct Config {
     int POPULATION_SIZE;
@@ -55,5 +61,5 @@ class GeneticAlgorithm {
 
    public:
     GeneticAlgorithm(Config& cfg, std::mt19937& g, const std::vector<int>& d);
-    std::pair<int, std::vector<int>> run();
+    Result run();
 };
