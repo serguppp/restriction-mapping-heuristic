@@ -10,19 +10,6 @@ from components.types import States
 from components.process import Process
 
 
-def reset_params() -> None:
-    st.session_state.update(asdict(Config()))  # type: ignore
-
-
-CPP_EXE_PATH = "./src/main"
-runner = CppRunner(CPP_EXE_PATH)
-
-# Page settings
-st.set_page_config(page_title="Restriction Mapping Heuristics", layout="wide")
-st.header("Restriction Mapping Heuristics")
-tab_config, tab_results = st.tabs(["Instance", "Results"])
-
-Config.update()
 
 if "p_points" not in st.session_state:
     st.session_state.p_points = ""
@@ -41,7 +28,17 @@ if "process" not in st.session_state:
     st.session_state.process = Process()
 
 process = st.session_state.process
+Config.update()
+CPP_EXE_PATH = "./src/main"
+runner = CppRunner(CPP_EXE_PATH)
 
+def reset_params() -> None:
+    st.session_state.update(asdict(Config()))  # type: ignore
+
+# Page settings
+st.set_page_config(page_title="Restriction Mapping Heuristics", layout="wide")
+st.header("Restriction Mapping Heuristics")
+tab_config, tab_results = st.tabs(["Instance", "Results"])
 
 # I/O
 with tab_config:

@@ -73,6 +73,18 @@ class Process:
                 st.session_state.output_m_value = int(match.group(2))
                 st.session_state.p_result = ", ".join(match.group(3).split(","))
 
+    def read_json_and_update_output(self) -> None:
+        if self.process:
+            try:
+                stdout_data, _ = self.process.communicate()
+                data = json.loads(stdout_data)
+                if data["status"] == "success":
+                    st.session_state.output_m_value = data["m_value"]
+                    st.session_state.p_result = map_list_to_string(data["p_result"])
+                    st.session_state.success_msg = "Algorithm finished successfully!"
+            except Exception as e:
+                st.error(f"Error reading result: {e}")        
+
     def pause(self) -> None:
         self.handle(States.PAUSED, "Algorithm paused")
 
@@ -88,20 +100,13 @@ class Process:
 
         self.read_queue_and_update_output()
 
-        poll = self.process.poll()
-        if poll is not None:
-            self.run_state = States.IDLE
-            try:
-                stdout_data, _ = self.process.communicate()
-                data = json.loads(stdout_data)
-                if data["status"] == "success":
-                    st.session_state.output_m_value = data["m_value"]
-                    st.session_state.p_result = map_list_to_string(data["p_result"])
-                    st.session_state.success_msg = "Algorithm finished successfully!"
-            except Exception as e:
-                st.error(f"Error reading result: {e}")
+        if self.process and self.process.poll() is not None:
+            self.read_json_and_update_output()
             self.process = None
+            self.run_state = States.IDLE
             st.rerun()
         else:
             time.sleep(0.1)
             st.rerun()
+
+        
