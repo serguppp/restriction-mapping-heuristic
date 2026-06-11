@@ -8,9 +8,11 @@ from typing import IO, Any
 
 import streamlit as st
 
-from components.processes import ProcessManager
+from components.process import Process
 from components.runner import CppRunner
 from components.types import States, dump_json, map_list_to_string, map_text_to_list
+
+
 
 
 def enqueue_output(output: IO[str], q: queue.Queue) -> None:
@@ -33,7 +35,7 @@ class Event(ABC):
         pass
 
     @abstractmethod
-    def run_and_proceed(self) -> None:
+    def run_and_proceed(self, process: Process | None = None) -> None:
         pass
 
 
@@ -59,7 +61,7 @@ class SetDEvent(Event):
         p_list_json = dump_json(map_text_to_list(self.p_points))
         return [p_list_json, str(self.positive_errors), str(self.negative_errors)]
 
-    def run_and_proceed(self) -> None:
+    def run_and_proceed(self, process: Process | None = None) -> None:
         if not self.p_points:
             st.warning("P vector is empty")
             return
@@ -102,7 +104,7 @@ class SetPDEvent(Event):
         ]
         return args
 
-    def run_and_proceed(self) -> None:
+    def run_and_proceed(self, process: Process | None = None) -> None:
         try:
             args = self.prepare_args()
             stdout = self.runner.run_generate_p_and_d(args)
@@ -153,25 +155,31 @@ class HeuristicEvents(Event):
         ]
         return args
 
-    def run_and_proceed(self) -> None:
+    def run_and_proceed(self, process: Process | None = None) -> None:
         if not self.p_text_area or not self.d_text_area:
             st.warning("P or D vector is empty")
             return
         try:
             args = self.prepare_args()
-            process = self.runner.run_heuristics(args)
-            st.session_state.process_manager = ProcessManager(process)
+            subprocess = self.runner.run_heuristics(args)
+            if process is None:
+                raise Exception("No process manager provided")
 
-            st.session_state.run_state = States.RUNNING
-            st.session_state.stderr_queue = queue.Queue()
-
-            thread = threading.Thread(
-                target=enqueue_output,
-                args=(process.stderr, st.session_state.stderr_queue),
+            process.set(
+                process=subprocess, run_state=States.RUNNING, queue=queue.Queue()
             )
 
-            thread.daemon = True
-            thread.start()
-            st.rerun()
+            if (
+                process.process is not None
+                and process.process.stderr is not None
+            ):
+                thread = threading.Thread(
+                    target=enqueue_output,
+                    args=(process.process.stderr, process.queue),
+                )
+
+                thread.daemon = True
+                thread.start()
+                st.rerun()
         except Exception as e:
             st.error(f"Error starting heuristics: {e}")

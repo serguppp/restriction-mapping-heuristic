@@ -4,9 +4,10 @@ import streamlit as st
 
 from components.config import Config
 from components.events import HeuristicEvents, SetDEvent, SetPDEvent
-from components.processes import ProcessManager
+
 from components.runner import CppRunner
 from components.types import States
+from components.process import Process
 
 
 def reset_params() -> None:
@@ -36,13 +37,10 @@ if "success_msg" not in st.session_state:
     st.session_state.success_msg = ""
 if "output_generation_value" not in st.session_state:
     st.session_state.output_generation_value = ""
+if "process" not in st.session_state:
+    st.session_state.process = Process()
 
-if "run_state" not in st.session_state:
-    st.session_state.run_state = States.IDLE
-if "stderr_queue" not in st.session_state:
-    st.session_state.stderr_queue = None
-if "process_manager" not in st.session_state:
-    st.session_state.process_manager = ProcessManager()
+process = st.session_state.process
 
 
 # I/O
@@ -127,7 +125,7 @@ with tab_results:
     with col1:
         ctrl_col1, ctrl_col2, ctrl_col3 = st.columns(3)
         with ctrl_col1:
-            if st.session_state.run_state == States.IDLE:
+            if process.run_state == States.IDLE:
                 if st.button("Run", type="primary", use_container_width=True):
                     heuristics_event = HeuristicEvents(
                         runner,
@@ -140,27 +138,27 @@ with tab_results:
                         max_generations,
                         tournament_size,
                     )
-                    heuristics_event.run_and_proceed()
+                    heuristics_event.run_and_proceed(process)
             else:
                 st.button("Run", disabled=True, use_container_width=True)
 
         with ctrl_col2:
-            if st.session_state.run_state == States.RUNNING:
+            if process.run_state == States.RUNNING:
                 if st.button("Pause", use_container_width=True):
-                    st.session_state.process_manager.pause()
-            elif st.session_state.run_state == States.PAUSED:
+                    process.pause()
+            elif process.run_state == States.PAUSED:
                 if st.button("Resume", use_container_width=True):
-                    st.session_state.process_manager.resume()
+                    process.resume()
             else:
                 st.button("Pause", disabled=True, use_container_width=True)
 
         with ctrl_col3:
-            if st.session_state.run_state in [
+            if process.run_state in (
                 States.RUNNING,
                 States.PAUSED,
-            ]:
+            ):
                 if st.button("Stop", type="primary", use_container_width=True):
-                    st.session_state.process_manager.stop()
+                    process.stop()
             else:
                 st.button("Stop", disabled=True, use_container_width=True)
 
@@ -180,4 +178,4 @@ with tab_results:
         )
 
 
-st.session_state.process_manager.update()
+process.update()
