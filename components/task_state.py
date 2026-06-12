@@ -1,5 +1,4 @@
-from dataclasses import dataclass
-
+from dataclasses import dataclass, field
 
 @dataclass
 class TaskState:
@@ -21,9 +20,11 @@ class TaskState:
 
     # results
     p_result: str = ""
-    m: str = ""
-    generation: str = ""
+    m: int = 0
+    generation: int = 0
     success_msg: str = ""
+
+    results: list[dict[str, int | str]] = field(default_factory=list)
 
     @property
     def config_fields(self) -> list[str]:
@@ -44,3 +45,6 @@ class TaskState:
         default = self.__class__()
         default_values = {key: getattr(default, key) for key in self.config_fields}
         self.__dict__.update(default_values)
+
+    def reset_results(self) -> None:
+        self.results = []

@@ -72,9 +72,18 @@ class Process:
             )
 
             if match:
-                self.task_state.generation = str(int(match.group(1)) + 1)
-                self.task_state.m = match.group(2)
+                self.task_state.generation = int(match.group(1)) + 1
+                self.task_state.m = int(match.group(2))
                 self.task_state.p_result = ", ".join(match.group(3).split(","))
+
+                self.task_state.results.append(
+                    {
+                        "generation": self.task_state.generation,
+                        "m": self.task_state.m,
+                        "p_result": self.task_state.p_result,
+                    }
+                )
+
 
     def read_json_and_update_output(self) -> None:
         if self.process:
@@ -82,8 +91,8 @@ class Process:
                 stdout_data, _ = self.process.communicate()
                 data = json.loads(stdout_data)
                 if data["status"] == "success":
-                    self.task_state.generation = str(data["generation"])
-                    self.task_state.m = str(data["m_value"])
+                    self.task_state.generation = int(data["generation"])
+                    self.task_state.m = int(data["m_value"])
                     self.task_state.p_result = map_list_to_string(data["p_result"])
                     self.task_state.success_msg = "Algorithm finished successfully!"
             except Exception as e:

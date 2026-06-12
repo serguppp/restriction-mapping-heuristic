@@ -1,10 +1,10 @@
 import streamlit as st
-
 from components.events import DEvent, HeuristicEvent, PDEvent
 from components.process import Process
 from components.runner import CppRunner
 from components.task_state import TaskState
 from components.types import States
+from components.results import get_results_df
 
 CPP_EXE_PATH = "./src/main"
 runner = CppRunner(CPP_EXE_PATH)
@@ -118,38 +118,34 @@ with tab_config:
 
 
 with tab_results:
-    col1, col2 = st.columns([1, 1])
+    col1, col2, col3= st.columns([0.2, 0.3, 0.5])
 
     with col1:
-        ctrl_col1, ctrl_col2, ctrl_col3 = st.columns(3)
-        with ctrl_col1:
-            if process.run_state == States.IDLE:
-                if st.button("Run", type="primary", use_container_width=True):
-                    HeuristicEvent.run_and_proceed(
-                        runner=runner, task_state=task_state, process=process
-                    )
-            else:
-                st.button("Run", disabled=True, use_container_width=True)
+        if process.run_state == States.IDLE:
+            if st.button("Run", type="primary", use_container_width=True):
+                HeuristicEvent.run_and_proceed(
+                    runner=runner, task_state=task_state, process=process
+                )
+        else:
+            st.button("Run", disabled=True, use_container_width=True)
 
-        with ctrl_col2:
-            if process.run_state == States.RUNNING:
-                if st.button("Pause", use_container_width=True):
-                    process.pause()
-            elif process.run_state == States.PAUSED:
-                if st.button("Resume", use_container_width=True):
-                    process.resume()
-            else:
-                st.button("Pause", disabled=True, use_container_width=True)
+        if process.run_state == States.RUNNING:
+            if st.button("Pause", use_container_width=True):
+                process.pause()
+        elif process.run_state == States.PAUSED:
+            if st.button("Resume", use_container_width=True):
+                process.resume()
+        else:
+            st.button("Pause", disabled=True, use_container_width=True)
 
-        with ctrl_col3:
-            if process.run_state in (
-                States.RUNNING,
-                States.PAUSED,
-            ):
-                if st.button("Stop", type="primary", use_container_width=True):
-                    process.stop()
-            else:
-                st.button("Stop", disabled=True, use_container_width=True)
+        if process.run_state in (
+            States.RUNNING,
+            States.PAUSED,
+        ):
+            if st.button("Stop", type="primary", use_container_width=True):
+                process.stop()
+        else:
+            st.button("Stop", disabled=True, use_container_width=True)
 
         if task_state.success_msg:
             st.success(task_state.success_msg)
@@ -163,8 +159,16 @@ with tab_results:
             label="Result P Points",
             value=task_state.p_result,
             height=150,
+            width=300,
             disabled=True,
         )
 
-
+    with col3:
+        if task_state.results:
+            st.line_chart(
+                get_results_df(task_state.p_size, task_state.results),
+                x="generation",
+                y=["Target value (P size)", "Current value (m)"],
+                width='stretch'
+            )
 process.update()

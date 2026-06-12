@@ -109,6 +109,8 @@ class HeuristicEvent:
             return
 
         try:
+            task_state.reset_results()
+            
             args = HeuristicEvent.prepare_args(task_state)
             subprocess = runner.run_heuristics(args)
             if process is None:
