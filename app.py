@@ -25,7 +25,7 @@ for field in task_state.all_fields:
 # Page settings
 st.set_page_config(page_title="Restriction Mapping Heuristic Algorithm", layout="wide")
 st.header("Restriction Mapping Heuristic Algorithm")
-tab_config, tab_results = st.tabs(["Instance", "Results"])
+tab_config, tab_results = st.tabs(["Instance", "Heuristic"])
 
 # I/O
 with tab_config:
@@ -164,10 +164,6 @@ with tab_results:
         else:
             st.button("Stop", disabled=True, use_container_width=True)
 
-        if task_state.success_msg:
-            st.success(task_state.success_msg)
-            task_state.success_msg = ""
-
     with col2:
         st.subheader("Heuristic")
 
@@ -188,6 +184,10 @@ with tab_results:
             width=500,
             disabled=True,
         )
+
+        if task_state.success_msg:
+            st.success(task_state.success_msg)
+            task_state.success_msg = ""
     with col3:
         if task_state.results:
             st.line_chart(
