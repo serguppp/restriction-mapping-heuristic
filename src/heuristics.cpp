@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <chrono>
 #include <csignal>
 #include <iostream>
 #include <set>
@@ -162,6 +163,8 @@ void GeneticAlgorithm::mutate(Individual& ind) {
 }
 
 Result GeneticAlgorithm::run() {
+    auto start_time = std::chrono::steady_clock::now();
+    std::chrono::duration<double> elapsed_time;
     int generation = 0;
     Individual best_individual = population[0];
     while (generation < config.MAX_GENERATIONS) {
@@ -169,17 +172,25 @@ Result GeneticAlgorithm::run() {
             std::cerr << "Algorithm stopped by user \n";
             break;
         }
+
+        auto current_time = std::chrono::steady_clock::now();
+        elapsed_time = current_time - start_time;
+        std::cerr << "Generation " << generation << ", Time: " << elapsed_time.count() << ": Fitness = " << best_individual.fitness << ", P size = " << best_individual.P.size() << ", Best P = ";
+        for (size_t i = 0; i < best_individual.P.size(); i++) {
+            std::cerr << best_individual.P[i] << (i == best_individual.P.size() - 1 ? "" : ",");
+        }
+        std::cerr << "\n";
+
+        if (elapsed_time >= config.MAX_TIME) {
+            std::cerr << "Algorithm stopped by time limit \n";
+            break;
+        }
+
         std::ranges::sort(population, [](const Individual& a, const Individual& b) { return a.fitness > b.fitness; });
 
         if (population[0].fitness > best_individual.fitness) {
             best_individual = population[0];
         }
-
-        std::cerr << "Generation " << generation << ": Fitness = " << best_individual.fitness << ", P size = " << best_individual.P.size() << ", Best P = ";
-        for (size_t i = 0; i < best_individual.P.size(); i++) {
-            std::cerr << best_individual.P[i] << (i == best_individual.P.size() - 1 ? "" : ",");
-        }
-        std::cerr << "\n";
 
         std::vector<Individual> new_population;
         new_population.reserve(config.POPULATION_SIZE);
@@ -227,5 +238,5 @@ Result GeneticAlgorithm::run() {
         generation++;
     }
 
-    return {.generation = generation, .p_size = best_individual.P.size(), .p_points = best_individual.P};
+    return {.generation = generation, .p_size = best_individual.P.size(), .p_points = best_individual.P, .time = elapsed_time};
 }

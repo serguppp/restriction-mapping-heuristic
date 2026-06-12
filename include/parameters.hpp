@@ -1,10 +1,12 @@
 #pragma once
+#include <chrono>
 #include <vector>
 
 enum class ExecutionMode { DEFAULT = 0, GENERATE_D = 1, RUN_HEURISTICS = 2 };
 
 struct Parameters {
     ExecutionMode flag;
+    std::chrono::duration<double> max_time;
     int m;
     int max_value;
     std::vector<int> p_vector;

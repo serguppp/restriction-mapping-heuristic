@@ -67,23 +67,17 @@ class Process:
         while q and not q.empty():
             line = q.get_nowait()
             match = re.search(
-                r"Generation (\d+).*P size\s*=\s*(\d+),\s*Best P\s*=\s*([\d,]+)",
+                r"Generation (\d+),\s*Time:\s*([\d.e+-]+).*P size\s*=\s*(\d+),\s*Best P\s*=\s*([\d,]+)",
                 line,
             )
 
             if match:
-                self.task_state.generation = int(match.group(1)) + 1
-                self.task_state.m = int(match.group(2))
-                self.task_state.p_result = ", ".join(match.group(3).split(","))
+                generation = int(match.group(1)) + 1
+                current_time = round(float(match.group(2)), 2)
+                m = int(match.group(3))
+                p_result = ", ".join(match.group(4).split(","))
 
-                self.task_state.results.append(
-                    {
-                        "generation": self.task_state.generation,
-                        "m": self.task_state.m,
-                        "p_result": self.task_state.p_result,
-                    }
-                )
-
+                self.task_state.set_results(generation, current_time, m, p_result)
 
     def read_json_and_update_output(self) -> None:
         if self.process:
@@ -91,9 +85,12 @@ class Process:
                 stdout_data, _ = self.process.communicate()
                 data = json.loads(stdout_data)
                 if data["status"] == "success":
-                    self.task_state.generation = int(data["generation"])
-                    self.task_state.m = int(data["m_value"])
-                    self.task_state.p_result = map_list_to_string(data["p_result"])
+                    generation = int(data["generation"])
+                    m = int(data["m_value"])
+                    current_time = round(float(data["time"]), 2)
+                    p_result = map_list_to_string(data["p_result"])
+
+                    self.task_state.set_results(generation, current_time, m, p_result)
                     self.task_state.success_msg = "Algorithm finished successfully!"
             except Exception as e:
                 st.error(f"Error reading result: {e}")

@@ -59,9 +59,9 @@ Parameters parse_arguments(int argc, char** argv) {
         }
 
         case ExecutionMode::RUN_HEURISTICS: {
-            if (argc < 10) {
+            if (argc < 11) {
                 std::cerr
-                    << R"({"status": "error", "message": "Mode 2 requires parameters: <mode:str> <p_list_json:str> <d_list_json:str> <population_size:str>, <mutation_rate:str>, <crossover_rate:str>, <elite_rate:str>, <max_generations:str>, <tournament_size:str>"})"
+                    << R"({"status": "error", "message": "Mode 2 requires parameters: <mode:str> <p_list_json:str> <d_list_json:str> <population_size:str>, <mutation_rate:str>, <crossover_rate:str>, <elite_rate:str>, <max_generations:str>, <tournament_size:str>, <max_time:str>"})"
                     << "\n";
                 throw std::runtime_error("Invalid arguments");
             }
@@ -74,6 +74,7 @@ Parameters parse_arguments(int argc, char** argv) {
             params.elite_rate = std::stod(argv[7]);
             params.max_generations = std::stoi(argv[8]);
             params.tournament_size = std::stoi(argv[9]);
+            params.max_time = std::chrono::duration<double>(std::stod(argv[10]));
             break;
         }
         default: {
@@ -101,7 +102,7 @@ json process_flags(const Parameters& params) {
             GeneticAlgorithm ga(cfg, get_gen(), params.d_vector);
             auto result = ga.run();
 
-            return json{{"status", "success"}, {"m_value", result.p_size}, {"p_result", result.p_points}, {"generation", result.generation}};
+            return json{{"status", "success"}, {"m_value", result.p_size}, {"p_result", result.p_points}, {"generation", result.generation}, {"time", result.time.count()}};
         }
         default:
             return json{{"status", "error"}, {"message", "Unknown execution mode"}};

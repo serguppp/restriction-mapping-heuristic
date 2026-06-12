@@ -97,6 +97,7 @@ class HeuristicEvent:
             str(task_state.elite_rate),
             str(task_state.max_generations),
             str(task_state.tournament_size),
+            str(task_state.max_time),
         ]
         return args
 
@@ -110,7 +111,7 @@ class HeuristicEvent:
 
         try:
             task_state.reset_results()
-            
+
             args = HeuristicEvent.prepare_args(task_state)
             subprocess = runner.run_heuristics(args)
             if process is None:

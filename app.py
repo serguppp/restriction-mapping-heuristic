@@ -1,10 +1,11 @@
 import streamlit as st
+
 from components.events import DEvent, HeuristicEvent, PDEvent
 from components.process import Process
+from components.results import get_results_df
 from components.runner import CppRunner
 from components.task_state import TaskState
 from components.types import States
-from components.results import get_results_df
 
 CPP_EXE_PATH = "./src/main"
 runner = CppRunner(CPP_EXE_PATH)
@@ -38,8 +39,8 @@ with tab_config:
 
     with col1:
         st.subheader("Input Parameters")
-        col1_1, col2_2 = st.columns(2)
-        with col1_1:
+        col_input_1, col_input_2 = st.columns(2)
+        with col_input_1:
             task_state.p_size = st.number_input(
                 "P size",
                 min_value=1,
@@ -68,7 +69,7 @@ with tab_config:
                 "Positive Errors", min_value=0, key="task_state.positive_errors"
             )
 
-        with col2_2:
+        with col_input_2:
             task_state.crossover_rate = st.number_input(
                 "Crossover Rate",
                 min_value=0.01,
@@ -93,6 +94,12 @@ with tab_config:
             task_state.negative_errors = st.number_input(
                 "Negative Errors", min_value=0, key="task_state.negative_errors"
             )
+            task_state.max_time = st.number_input(
+                "Max Time (seconds)",
+                min_value=1.0,
+                max_value=3600.0,
+                key="task_state.max_time",
+            )
 
     with col2:
         st.subheader("Generated P Points")
@@ -107,22 +114,23 @@ with tab_config:
     with col2:
         st.button("Reset Params", on_click=reset_config)
 
-        sb_col1, sb_col2, sb_col3 = st.columns([1.5, 1.5, 1])
-        with sb_col1:
+        col_reset_1, col_reset_2 = st.columns([1.5, 1.5])
+        with col_reset_1:
             if st.button("Set P,D", use_container_width=True):
                 PDEvent.run_and_proceed(runner=runner, task_state=task_state)
 
-        with sb_col2:
+        with col_reset_2:
             if st.button("Set D", use_container_width=True):
                 DEvent.run_and_proceed(runner=runner, task_state=task_state)
 
 
 with tab_results:
-    col1, col2, col3= st.columns([0.2, 0.3, 0.5])
+    col1, col2, col3 = st.columns([0.2, 0.4, 0.4])
 
     with col1:
         if process.run_state == States.IDLE:
             if st.button("Run", type="primary", use_container_width=True):
+                task_state.reset_results()
                 HeuristicEvent.run_and_proceed(
                     runner=runner, task_state=task_state, process=process
                 )
@@ -153,13 +161,22 @@ with tab_results:
 
     with col2:
         st.subheader("Results")
-        st.metric(label="Generation", value=task_state.generation)
-        st.metric(label="Found P Size (m)", value=task_state.m)
+
+        col_results_1, col_results_2, col_results_3 = st.columns([1, 1, 1])
+        with col_results_1:
+            st.metric(label="Time (seconds)", value=task_state.current_time)
+
+        with col_results_2:
+            st.metric(label="Generation", value=task_state.generation)
+
+        with col_results_3:
+            st.metric(label="Found P Size (m)", value=task_state.m)
+
         st.text_area(
             label="Result P Points",
             value=task_state.p_result,
             height=150,
-            width=300,
+            width=500,
             disabled=True,
         )
 
@@ -169,6 +186,13 @@ with tab_results:
                 get_results_df(task_state.p_size, task_state.results),
                 x="generation",
                 y=["Target value (P size)", "Current value (m)"],
-                width='stretch'
+                width="stretch",
+            )
+
+            st.line_chart(
+                get_results_df(task_state.p_size, task_state.results),
+                x="time",
+                y=["Target value (P size)", "Current value (m)"],
+                width="stretch",
             )
 process.update()

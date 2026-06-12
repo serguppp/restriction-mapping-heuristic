@@ -9,6 +9,7 @@ struct Result {
     int generation;
     size_t p_size;
     std::vector<int> p_points;
+    std::chrono::duration<double> time;
 };
 
 // MIN SUPERSET PDB - p = {p1, ..., pm} such that D = { |pi - pj| : 1 <= i < j <= m } and m is minimal
@@ -19,8 +20,9 @@ struct Config {
     double ELITE_RATE;
     int MAX_GENERATIONS;
     int TOURNAMENT_SIZE;
+    std::chrono::duration<double> MAX_TIME;
 
-    Config() : POPULATION_SIZE(100), MUTATION_RATE(0.05), CROSSOVER_RATE(0.8), ELITE_RATE(0.1), MAX_GENERATIONS(1000), TOURNAMENT_SIZE(5) {}  // move it to cpp
+    Config() : POPULATION_SIZE(100), MUTATION_RATE(0.05), CROSSOVER_RATE(0.8), ELITE_RATE(0.1), MAX_GENERATIONS(1000), TOURNAMENT_SIZE(5), MAX_TIME(60) {}  // move it to cpp
     Config(const Parameters& p) : Config() {
         POPULATION_SIZE = p.population_size;
         MUTATION_RATE = p.mutation_rate;
@@ -28,6 +30,7 @@ struct Config {
         ELITE_RATE = p.elite_rate;
         MAX_GENERATIONS = p.max_generations;
         TOURNAMENT_SIZE = p.tournament_size;
+        MAX_TIME = p.max_time;
     }
 };
 
