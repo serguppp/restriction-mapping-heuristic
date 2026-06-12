@@ -1,24 +1,26 @@
 from dataclasses import dataclass, field
 
+import streamlit as st
+
 
 @dataclass
 class TaskState:
-    # config
+    # instance
     p_size: int = 10
     max_value: int = 100
+    positive_errors: int = 0
+    negative_errors: int = 0
+    p_points: str = ""
+    d_distances: str = ""
+
+    # algorithm config
     population_size: int = 100
     mutation_rate: float = 0.05
     crossover_rate: float = 0.8
     elite_rate: float = 0.1
     max_generations: int = 100
     tournament_size: int = 5
-    positive_errors: int = 0
-    negative_errors: int = 0
     max_time: float = 60.0
-
-    # instance
-    p_points: str = ""
-    d_distances: str = ""
 
     # results
     p_result: str = ""
@@ -32,23 +34,40 @@ class TaskState:
     @property
     def config_fields(self) -> list[str]:
         return [
-            "p_size",
-            "max_value",
             "population_size",
             "mutation_rate",
-            "positive_errors",
             "crossover_rate",
             "elite_rate",
             "max_generations",
             "tournament_size",
-            "negative_errors",
             "max_time",
         ]
 
-    def reset_config(self) -> None:
+    @property
+    def instance_fields(self) -> list[str]:
+        return [
+            "p_size",
+            "max_value",
+            "positive_errors",
+            "negative_errors",
+        ]
+
+    @property
+    def all_fields(self) -> list[str]:
+        return self.config_fields + self.instance_fields
+
+    def reset(self, fields: list[str]) -> None:
         default = self.__class__()
-        default_values = {key: getattr(default, key) for key in self.config_fields}
+        default_values = {key: getattr(default, key) for key in fields}
         self.__dict__.update(default_values)
+        for f in fields:
+            st.session_state[f"task_state.{f}"] = getattr(self, f)
+
+    def reset_config(self) -> None:
+        self.reset(self.config_fields)
+
+    def reset_instance(self) -> None:
+        self.reset(self.instance_fields)
 
     def set_results(
         self, generation: int, current_time: float, m: int, p_result: str

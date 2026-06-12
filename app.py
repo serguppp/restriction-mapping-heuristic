@@ -10,6 +10,7 @@ from components.types import States
 CPP_EXE_PATH = "./src/main"
 runner = CppRunner(CPP_EXE_PATH)
 
+
 if "task_state" not in st.session_state:
     st.session_state.task_state = TaskState()
 task_state: TaskState = st.session_state.task_state
@@ -18,19 +19,12 @@ if "process" not in st.session_state:
     st.session_state.process = Process(task_state=task_state)
 process: Process = st.session_state.process
 
-for field in task_state.config_fields:
+for field in task_state.all_fields:
     st.session_state.setdefault(f"task_state.{field}", getattr(task_state, field))
 
-
-def reset_config() -> None:
-    task_state.reset_config()
-    for field in task_state.config_fields:
-        st.session_state[f"task_state.{field}"] = getattr(task_state, field)
-
-
 # Page settings
-st.set_page_config(page_title="Restriction Mapping Heuristics", layout="wide")
-st.header("Restriction Mapping Heuristics")
+st.set_page_config(page_title="Restriction Mapping Heuristic Algorithm", layout="wide")
+st.header("Restriction Mapping Heuristic Algorithm")
 tab_config, tab_results = st.tabs(["Instance", "Results"])
 
 # I/O
@@ -38,7 +32,7 @@ with tab_config:
     col1, col2, col3 = st.columns([1, 1, 1])
 
     with col1:
-        st.subheader("Input Parameters")
+        st.subheader("Instance Parameters")
         col_input_1, col_input_2 = st.columns(2)
         with col_input_1:
             task_state.p_size = st.number_input(
@@ -47,58 +41,19 @@ with tab_config:
                 max_value=100,
                 key="task_state.p_size",
             )
+            task_state.positive_errors = st.number_input(
+                "Positive Errors", min_value=0, key="task_state.positive_errors"
+            )
+
+        with col_input_2:
             task_state.max_value = st.number_input(
                 "Max Distance Value",
                 min_value=1,
                 max_value=1000,
                 key="task_state.max_value",
             )
-            task_state.population_size = st.number_input(
-                "Population Size",
-                min_value=1,
-                max_value=1000,
-                key="task_state.population_size",
-            )
-            task_state.mutation_rate = st.number_input(
-                "Mutation Rate",
-                min_value=0.01,
-                max_value=1.0,
-                key="task_state.mutation_rate",
-            )
-            task_state.positive_errors = st.number_input(
-                "Positive Errors", min_value=0, key="task_state.positive_errors"
-            )
-
-        with col_input_2:
-            task_state.crossover_rate = st.number_input(
-                "Crossover Rate",
-                min_value=0.01,
-                max_value=1.0,
-                key="task_state.crossover_rate",
-            )
-            task_state.elite_rate = st.number_input(
-                "Elite Rate", min_value=0.01, max_value=1.0, key="task_state.elite_rate"
-            )
-            task_state.max_generations = st.number_input(
-                "Max Generations",
-                min_value=1,
-                max_value=10000,
-                key="task_state.max_generations",
-            )
-            task_state.tournament_size = st.number_input(
-                "Tournament Size",
-                min_value=1,
-                max_value=100,
-                key="task_state.tournament_size",
-            )
             task_state.negative_errors = st.number_input(
                 "Negative Errors", min_value=0, key="task_state.negative_errors"
-            )
-            task_state.max_time = st.number_input(
-                "Max Time (seconds)",
-                min_value=1.0,
-                max_value=3600.0,
-                key="task_state.max_time",
             )
 
     with col2:
@@ -112,7 +67,7 @@ with tab_config:
         )
 
     with col2:
-        st.button("Reset Params", on_click=reset_config)
+        st.button("Reset Params", on_click=task_state.reset_instance)
 
         col_reset_1, col_reset_2 = st.columns([1.5, 1.5])
         with col_reset_1:
@@ -125,12 +80,66 @@ with tab_config:
 
 
 with tab_results:
-    col1, col2, col3 = st.columns([0.2, 0.4, 0.4])
+    col1, col2, col3 = st.columns(3)
 
     with col1:
+        st.subheader("Algorithm Parameters")
+
+        col_results_1, col_results_2 = st.columns(2)
+        with col_results_1:
+            task_state.population_size = st.number_input(
+                "Population Size",
+                min_value=1,
+                max_value=10000,
+                key="task_state.population_size",
+            )
+            task_state.mutation_rate = st.number_input(
+                "Mutation Rate",
+                min_value=0.01,
+                max_value=1.0,
+                key="task_state.mutation_rate",
+            )
+            task_state.crossover_rate = st.number_input(
+                "Crossover Rate",
+                min_value=0.01,
+                max_value=1.0,
+                key="task_state.crossover_rate",
+            )
+
+        with col_results_2:
+            task_state.tournament_size = st.number_input(
+                "Tournament Size",
+                min_value=1,
+                max_value=100,
+                key="task_state.tournament_size",
+            )
+            task_state.max_generations = st.number_input(
+                "Max Generations",
+                min_value=1,
+                max_value=10000,
+                key="task_state.max_generations",
+            )
+            task_state.max_time = st.number_input(
+                "Max Time (seconds)",
+                min_value=1.0,
+                max_value=3600.0,
+                key="task_state.max_time",
+            )
+
+        col_results_3, col_results_4 = st.columns(2, vertical_alignment="bottom")
+        with col_results_3:
+            task_state.elite_rate = st.number_input(
+                "Elite Rate", min_value=0.01, max_value=1.0, key="task_state.elite_rate"
+            )
+        with col_results_4:
+            st.button(
+                "Reset Config",
+                on_click=task_state.reset_config,
+                use_container_width=True,
+            )
+
         if process.run_state == States.IDLE:
             if st.button("Run", type="primary", use_container_width=True):
-                task_state.reset_results()
                 HeuristicEvent.run_and_proceed(
                     runner=runner, task_state=task_state, process=process
                 )
@@ -160,7 +169,7 @@ with tab_results:
             task_state.success_msg = ""
 
     with col2:
-        st.subheader("Results")
+        st.subheader("Heuristic")
 
         col_results_1, col_results_2, col_results_3 = st.columns([1, 1, 1])
         with col_results_1:
@@ -179,7 +188,6 @@ with tab_results:
             width=500,
             disabled=True,
         )
-
     with col3:
         if task_state.results:
             st.line_chart(
