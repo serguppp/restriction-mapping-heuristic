@@ -165,7 +165,7 @@ with tab_results:
             st.button("Stop", disabled=True, use_container_width=True)
 
     with col2:
-        st.subheader("Heuristic")
+        st.subheader("Results")
 
         col_results_1, col_results_2, col_results_3 = st.columns([1, 1, 1])
         with col_results_1:
@@ -192,14 +192,14 @@ with tab_results:
         if task_state.results:
             st.line_chart(
                 get_results_df(task_state.p_size, task_state.results),
-                x="generation",
+                x="Generation",
                 y=["Target value (P size)", "Current value (m)"],
                 width="stretch",
             )
 
             st.line_chart(
                 get_results_df(task_state.p_size, task_state.results),
-                x="time",
+                x="Time (seconds)",
                 y=["Target value (P size)", "Current value (m)"],
                 width="stretch",
             )
