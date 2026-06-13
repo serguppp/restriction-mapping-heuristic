@@ -10,7 +10,6 @@ from components.types import States
 CPP_EXE_PATH = "./src/main_O3"
 runner = CppRunner(CPP_EXE_PATH)
 
-
 if "task_state" not in st.session_state:
     st.session_state.task_state = TaskState()
 task_state: TaskState = st.session_state.task_state

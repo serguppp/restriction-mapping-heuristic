@@ -2,6 +2,7 @@
 generator-beta.cpp
 /src/main
 /src/main_O3
+/src/main_O3_seeds
 /src/generator
 /src/algorithm
 /src/heuristics

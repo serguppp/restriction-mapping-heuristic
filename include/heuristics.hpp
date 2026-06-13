@@ -54,6 +54,7 @@ class GeneticAlgorithm {
     std::vector<int> set_candidates();
     std::vector<Individual> set_population();
     bool create_random_gene();
+    Individual create_seeded_individual();
     std::vector<int> decode_chromosome(const std::vector<bool>& chromosome);
     std::vector<bool> encode_chromosome(const std::vector<int>& P);
     Individual create_random_individual();

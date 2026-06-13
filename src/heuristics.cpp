@@ -49,12 +49,21 @@ std::vector<int> GeneticAlgorithm::set_candidates() {
 bool GeneticAlgorithm::create_random_gene() { return random_double() < 0.5; }
 
 std::vector<Individual> GeneticAlgorithm::set_population() {
-    std::vector<Individual> pop;
-    pop.reserve(config.POPULATION_SIZE);
-    for (int i = 0; i < config.POPULATION_SIZE; i++) {
-        pop.push_back(create_random_individual());
+    std::vector<Individual> population;
+    population.reserve(config.POPULATION_SIZE);
+
+    int seed_count = static_cast<int>(0.10 * config.POPULATION_SIZE);
+    seed_count = std::max(seed_count, 1);
+
+    for (int i = 0; i < seed_count; i++) {
+        population.push_back(create_seeded_individual());
     }
-    return pop;
+
+    for (int i = seed_count; i < config.POPULATION_SIZE; i++) {
+        population.push_back(create_random_individual());
+    }
+    std::ranges::sort(population, [](const Individual& a, const Individual& b) { return a.fitness > b.fitness; });
+    return population;
 }
 
 std::vector<int> GeneticAlgorithm::decode_chromosome(const std::vector<bool>& chromosome) {
@@ -78,6 +87,19 @@ std::vector<bool> GeneticAlgorithm::encode_chromosome(const std::vector<int>& P)
     chromosome[0] = true;
     chromosome.back() = true;
     return chromosome;
+}
+
+Individual GeneticAlgorithm::create_seeded_individual() {
+    Individual ind;
+    ind.chromosome.resize(C.size(), false);
+    ind.chromosome[0] = true;
+    ind.chromosome.back() = true;
+
+    ind.P = decode_chromosome(ind.chromosome);
+    ind.P = repair(ind.P);
+    ind.chromosome = encode_chromosome(ind.P);
+    ind.fitness = calculate_fitness(ind.P);
+    return ind;
 }
 
 Individual GeneticAlgorithm::create_random_individual() {
@@ -209,6 +231,7 @@ Result GeneticAlgorithm::run() {
     std::chrono::duration<double> elapsed_time;
     int generation = 0;
     Individual best_individual = population[0];
+
     while (generation < config.MAX_GENERATIONS) {
         if (stop) {
             std::cerr << "Algorithm stopped by user \n";
@@ -226,12 +249,6 @@ Result GeneticAlgorithm::run() {
         if (elapsed_time >= config.MAX_TIME) {
             std::cerr << "Algorithm stopped by time limit \n";
             break;
-        }
-
-        std::ranges::sort(population, [](const Individual& a, const Individual& b) { return a.fitness > b.fitness; });
-
-        if (population[0].fitness > best_individual.fitness) {
-            best_individual = population[0];
         }
 
         std::vector<Individual> new_population;
@@ -277,6 +294,13 @@ Result GeneticAlgorithm::run() {
             }
         }
         population = std::move(new_population);
+
+        std::ranges::sort(population, [](const Individual& a, const Individual& b) { return a.fitness > b.fitness; });
+
+        if (population[0].fitness > best_individual.fitness) {
+            best_individual = population[0];
+        }
+
         generation++;
     }
 
