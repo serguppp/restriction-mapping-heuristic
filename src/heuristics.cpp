@@ -46,7 +46,7 @@ std::vector<int> GeneticAlgorithm::set_candidates() {
     return {candidates.begin(), candidates.end()};
 }
 
-bool GeneticAlgorithm::create_random_gene() { return random_double() < 0.5; }
+bool GeneticAlgorithm::create_random_gene() { return random_double() < 0.01; }
 
 std::vector<Individual> GeneticAlgorithm::set_population() {
     std::vector<Individual> population;
@@ -106,10 +106,17 @@ Individual GeneticAlgorithm::create_seeded_individual() {
 
 Individual GeneticAlgorithm::create_random_individual() {
     Individual ind;
-    ind.chromosome.reserve(C.size());
-    for (size_t i = 0; i < C.size(); i++) {
-        ind.chromosome.push_back(create_random_gene());
+    ind.chromosome.resize(C.size(), false);
+
+    double target_p_size = (1.0 + std::sqrt(1.0 + (8.0 * static_cast<double>(C.size())))) / 2.0;
+    double prob = std::min(1.0, (target_p_size * 1.2) / static_cast<int>(C.size()));
+
+    for (size_t i = 1; i < C.size() - 1; i++) {
+        if (random_double() < prob) {
+            ind.chromosome[i] = true;
+        }
     }
+
     ind.chromosome[0] = true;
     ind.chromosome.back() = true;
 
@@ -126,6 +133,7 @@ std::vector<int> GeneticAlgorithm::repair(std::vector<int> child_p) {
 
     while (true) {
         std::vector<int> child_d;
+        child_d.reserve(child_p.size() * (child_p.size() - 1) / 2);
         for (size_t i = 0; i < child_p.size(); i++) {
             for (size_t j = i + 1; j < child_p.size(); j++) {
                 child_d.push_back(std::abs(child_p[i] - child_p[j]));
@@ -148,10 +156,10 @@ std::vector<int> GeneticAlgorithm::repair(std::vector<int> child_p) {
         for (int p : child_p) {
             int dist_d = std::abs(p - d);
             int dist_d_max = std::abs(p - d_max);
-            if (std::ranges::find(missing_d_values, dist_d) != missing_d_values.end()) {
+            if (std::ranges::binary_search(missing_d_values.begin(), missing_d_values.end(), dist_d)) {
                 cover_count_d++;
             }
-            if (std::ranges::find(missing_d_values, dist_d_max) != missing_d_values.end()) {
+            if (std::ranges::binary_search(missing_d_values.begin(), missing_d_values.end(), dist_d_max)) {
                 cover_count_d_max++;
             }
         }
@@ -161,15 +169,15 @@ std::vector<int> GeneticAlgorithm::repair(std::vector<int> child_p) {
         std::ranges::sort(child_p);
     }
 
-    for (size_t i = 1; i < child_p.size();) {
+    for (size_t i = 1; i < child_p.size() - 1;) {
         std::vector<int> temp_p = child_p;
         temp_p.erase(temp_p.begin() + static_cast<int>(i));
 
         std::vector<int> temp_d;
         temp_d.reserve(temp_p.size() * (temp_p.size() - 1) / 2);
-        for (size_t i = 0; i < temp_p.size(); i++) {
-            for (size_t j = i + 1; j < temp_p.size(); j++) {
-                int diff = std::abs(temp_p[i] - temp_p[j]);
+        for (size_t j = 0; j < temp_p.size(); j++) {
+            for (size_t k = j + 1; k < temp_p.size(); k++) {
+                int diff = std::abs(temp_p[j] - temp_p[k]);
                 temp_d.push_back(diff);
             }
         }
