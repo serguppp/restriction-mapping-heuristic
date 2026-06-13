@@ -102,7 +102,7 @@ json process_flags(const Parameters& params) {
             GeneticAlgorithm ga(cfg, get_gen(), params.d_vector);
             auto result = ga.run();
 
-            return json{{"status", "success"}, {"m_value", result.p_size}, {"p_result", result.p_points}, {"generation", result.generation}, {"time", result.time.count()}};
+            return json{{"status", "success"}, {"m_value", result.p_size}, {"p_result", result.p_points}, {"generation", result.generation}, {"time", result.time.count()}, {"message", result.message}};
         }
         default:
             return json{{"status", "error"}, {"message", "Unknown execution mode"}};

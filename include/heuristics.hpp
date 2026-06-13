@@ -10,6 +10,7 @@ struct Result {
     size_t p_size;
     std::vector<int> p_points;
     std::chrono::duration<double> time;
+    std::string message;
 };
 
 // MIN SUPERSET PDB - p = {p1, ..., pm} such that D = { |pi - pj| : 1 <= i < j <= m } and m is minimal

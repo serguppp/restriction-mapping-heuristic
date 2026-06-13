@@ -233,9 +233,10 @@ Result GeneticAlgorithm::run() {
     int generations_without_progress = 0;
     Individual best_individual = population[0];
 
+    std::string message;
     while (true) {
         if (stop) {
-            std::cerr << "Algorithm stopped by user \n";
+            message = "Algorithm stopped by user";
             break;
         }
 
@@ -248,12 +249,12 @@ Result GeneticAlgorithm::run() {
         std::cerr << "\n";
 
         if (elapsed_time >= config.MAX_TIME) {
-            std::cerr << "Algorithm stopped by time limit \n";
+            message = "Algorithm stopped by time limit";
             break;
         }
 
         if (generations_without_progress >= config.MAX_GENERATIONS) {
-            std::cerr << "Algorithm stopped by generations limit \n";
+            message = "Algorithm stopped by generations limit";
             break;
         }
         std::vector<Individual> new_population;
@@ -312,5 +313,5 @@ Result GeneticAlgorithm::run() {
         generation++;
     }
 
-    return {.generation = generation, .p_size = best_individual.P.size(), .p_points = best_individual.P, .time = elapsed_time};
+    return {.generation = generation, .p_size = best_individual.P.size(), .p_points = best_individual.P, .time = elapsed_time, .message = message};
 }

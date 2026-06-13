@@ -89,9 +89,10 @@ class Process:
                     m = int(data["m_value"])
                     current_time = round(float(data["time"]), 2)
                     p_result = map_list_to_string(data["p_result"])
+                    message = data["message"]
 
                     self.task_state.set_results(generation, current_time, m, p_result)
-                    self.task_state.success_msg = "Algorithm finished successfully!"
+                    self.task_state.success_msg = message
             except Exception as e:
                 st.error(f"Error reading result: {e}")
 

@@ -87,3 +87,8 @@ class TaskState:
 
     def reset_results(self) -> None:
         self.results = []
+        self.generation = 0
+        self.current_time = 0.0
+        self.m = 0
+        self.p_result = ""
+        self.success_msg = ""
