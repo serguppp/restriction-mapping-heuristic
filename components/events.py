@@ -97,6 +97,7 @@ class HeuristicEvent:
             str(task_state.elite_rate),
             str(task_state.max_generations),
             str(task_state.tournament_size),
+            str(task_state.seeded_population_rate),
             str(task_state.max_time),
         ]
         return args

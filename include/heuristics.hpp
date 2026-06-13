@@ -21,9 +21,10 @@ struct Config {
     double ELITE_RATE;
     int MAX_GENERATIONS;
     int TOURNAMENT_SIZE;
+    double SEEDED_POPULATION_RATE;
     std::chrono::duration<double> MAX_TIME;
 
-    Config() : POPULATION_SIZE(100), MUTATION_RATE(0.05), CROSSOVER_RATE(0.8), ELITE_RATE(0.1), MAX_GENERATIONS(25), TOURNAMENT_SIZE(5), MAX_TIME(60) {}  // move it to cpp
+    Config() : POPULATION_SIZE(100), MUTATION_RATE(0.05), CROSSOVER_RATE(0.8), ELITE_RATE(0.1), MAX_GENERATIONS(25), TOURNAMENT_SIZE(5), SEEDED_POPULATION_RATE(0.1), MAX_TIME(60) {}  // move it to cpp
     Config(const Parameters& p) : Config() {
         POPULATION_SIZE = p.population_size;
         MUTATION_RATE = p.mutation_rate;
@@ -32,6 +33,7 @@ struct Config {
         MAX_GENERATIONS = p.max_generations;
         TOURNAMENT_SIZE = p.tournament_size;
         MAX_TIME = p.max_time;
+        SEEDED_POPULATION_RATE = p.seeded_population_rate;
     }
 };
 

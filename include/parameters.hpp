@@ -6,7 +6,6 @@ enum class ExecutionMode { DEFAULT = 0, GENERATE_D = 1, RUN_HEURISTICS = 2 };
 
 struct Parameters {
     ExecutionMode flag;
-    std::chrono::duration<double> max_time;
     int m;
     int max_value;
     std::vector<int> p_vector;
@@ -17,6 +16,8 @@ struct Parameters {
     double elite_rate;
     int max_generations;
     int tournament_size;
+    double seeded_population_rate;
+    std::chrono::duration<double> max_time;
     int positive_errors;
     int negative_errors;
 };

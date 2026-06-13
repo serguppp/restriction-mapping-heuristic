@@ -82,7 +82,15 @@ with tab_results:
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        st.subheader("Algorithm Parameters")
+        col_header_1, col_header_2 = st.columns(2, vertical_alignment="center")
+        with col_header_1:
+            st.subheader("Algorithm Parameters")
+        with col_header_2:
+            st.button(
+                "Reset Config",
+                on_click=task_state.reset_config,
+                use_container_width=True,
+            )
 
         col_results_1, col_results_2 = st.columns(2)
         with col_results_1:
@@ -104,6 +112,9 @@ with tab_results:
                 max_value=1.0,
                 key="task_state.crossover_rate",
             )
+            task_state.elite_rate = st.number_input(
+                "Elite Rate", min_value=0.01, max_value=1.0, key="task_state.elite_rate"
+            )
 
         with col_results_2:
             task_state.tournament_size = st.number_input(
@@ -124,17 +135,11 @@ with tab_results:
                 max_value=3600.0,
                 key="task_state.max_time",
             )
-
-        col_results_3, col_results_4 = st.columns(2, vertical_alignment="bottom")
-        with col_results_3:
-            task_state.elite_rate = st.number_input(
-                "Elite Rate", min_value=0.01, max_value=1.0, key="task_state.elite_rate"
-            )
-        with col_results_4:
-            st.button(
-                "Reset Config",
-                on_click=task_state.reset_config,
-                use_container_width=True,
+            task_state.seeded_population_rate = st.number_input(
+                "Seeded Population Rate",
+                min_value=0.0,
+                max_value=1.0,
+                key="task_state.seeded_population_rate",
             )
 
         if process.run_state == States.IDLE:

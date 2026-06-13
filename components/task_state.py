@@ -20,6 +20,7 @@ class TaskState:
     elite_rate: float = 0.1
     max_generations: int = 25
     tournament_size: int = 5
+    seeded_population_rate: float = 0.1
     max_time: float = 60.0
 
     # results
@@ -40,6 +41,7 @@ class TaskState:
             "elite_rate",
             "max_generations",
             "tournament_size",
+            "seeded_population_rate",
             "max_time",
         ]
 

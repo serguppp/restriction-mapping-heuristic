@@ -52,8 +52,10 @@ std::vector<Individual> GeneticAlgorithm::set_population() {
     std::vector<Individual> population;
     population.reserve(config.POPULATION_SIZE);
 
-    int seed_count = static_cast<int>(0.10 * config.POPULATION_SIZE);
-    seed_count = std::max(seed_count, 1);
+    int seed_count = static_cast<int>(config.SEEDED_POPULATION_RATE * config.POPULATION_SIZE);
+    if (config.SEEDED_POPULATION_RATE > 0.0 && seed_count < 1) {
+        seed_count = 1;
+    }
 
     for (int i = 0; i < seed_count; i++) {
         population.push_back(create_seeded_individual());

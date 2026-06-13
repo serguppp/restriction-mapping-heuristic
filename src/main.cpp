@@ -59,9 +59,9 @@ Parameters parse_arguments(int argc, char** argv) {
         }
 
         case ExecutionMode::RUN_HEURISTICS: {
-            if (argc < 11) {
+            if (argc < 12) {
                 std::cerr
-                    << R"({"status": "error", "message": "Mode 2 requires parameters: <mode:str> <p_list_json:str> <d_list_json:str> <population_size:str>, <mutation_rate:str>, <crossover_rate:str>, <elite_rate:str>, <max_generations:str>, <tournament_size:str>, <max_time:str>"})"
+                    << R"({"status": "error", "message": "Mode 2 requires parameters: <mode:str> <p_list_json:str> <d_list_json:str> <population_size:str>, <mutation_rate:str>, <crossover_rate:str>, <elite_rate:str>, <max_generations:str>, <tournament_size:str>, <seeded_population_rate:str>, <max_time:str>"})"
                     << "\n";
                 throw std::runtime_error("Invalid arguments");
             }
@@ -74,7 +74,8 @@ Parameters parse_arguments(int argc, char** argv) {
             params.elite_rate = std::stod(argv[7]);
             params.max_generations = std::stoi(argv[8]);
             params.tournament_size = std::stoi(argv[9]);
-            params.max_time = std::chrono::duration<double>(std::stod(argv[10]));
+            params.seeded_population_rate = std::stod(argv[10]);
+            params.max_time = std::chrono::duration<double>(std::stod(argv[11]));
             break;
         }
         default: {
