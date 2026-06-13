@@ -216,8 +216,12 @@ std::pair<Individual, Individual> GeneticAlgorithm::crossover(const Individual& 
     c1.chromosome.resize(C.size());
     c2.chromosome.resize(C.size());
 
+    int pt1 = random_int(0, static_cast<int>(C.size() - 1));
+    int pt2 = random_int(0, static_cast<int>(C.size() - 1));
+    if (pt1 > pt2) std::swap(pt1, pt2);
+
     for (size_t i = 0; i < C.size(); i++) {
-        if (random_double() < 0.5) {
+        if (i < pt1 || i > pt2) {
             c1.chromosome[i] = p1.chromosome[i];
             c2.chromosome[i] = p2.chromosome[i];
         } else {
@@ -227,7 +231,6 @@ std::pair<Individual, Individual> GeneticAlgorithm::crossover(const Individual& 
     }
     return {c1, c2};
 }
-
 void GeneticAlgorithm::mutate(Individual& ind) {
     for (size_t i = 1; i < C.size() - 1; i++) {
         if (random_double() < config.MUTATION_RATE) {
