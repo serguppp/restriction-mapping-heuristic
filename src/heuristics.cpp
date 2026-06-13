@@ -98,6 +98,8 @@ Individual GeneticAlgorithm::create_random_individual() {
 
 std::vector<int> GeneticAlgorithm::repair(std::vector<int> child_p) {
     std::ranges::sort(child_p);
+    int max_distance = *std::ranges::max_element(D.begin(), D.end());
+
     while (true) {
         std::vector<int> child_d;
         for (size_t i = 0; i < child_p.size(); i++) {
@@ -113,10 +115,50 @@ std::vector<int> GeneticAlgorithm::repair(std::vector<int> child_p) {
             break;
         }
 
-        // greedy repiar
-        int missing_distance = missing_d_values.back();
-        child_p.push_back(missing_distance);
+        int d = missing_d_values.back();
+        int d_max = max_distance - d;
+
+        int cover_count_d = 0;
+        int cover_count_d_max = 0;
+
+        for (int p : child_p) {
+            int dist_d = std::abs(p - d);
+            int dist_d_max = std::abs(p - d_max);
+            if (std::ranges::find(missing_d_values, dist_d) != missing_d_values.end()) {
+                cover_count_d++;
+            }
+            if (std::ranges::find(missing_d_values, dist_d_max) != missing_d_values.end()) {
+                cover_count_d_max++;
+            }
+        }
+
+        int best = cover_count_d > cover_count_d_max ? d : d_max;
+        child_p.push_back(best);
         std::ranges::sort(child_p);
+    }
+
+    for (size_t i = 1; i < child_p.size();) {
+        std::vector<int> temp_p = child_p;
+        temp_p.erase(temp_p.begin() + static_cast<int>(i));
+
+        std::vector<int> temp_d;
+        temp_d.reserve(temp_p.size() * (temp_p.size() - 1) / 2);
+        for (size_t i = 0; i < temp_p.size(); i++) {
+            for (size_t j = i + 1; j < temp_p.size(); j++) {
+                int diff = std::abs(temp_p[i] - temp_p[j]);
+                temp_d.push_back(diff);
+            }
+        }
+
+        std::ranges::sort(temp_d);
+        std::vector<int> missing_d_values;
+        std::ranges::set_difference(D, temp_d, std::back_inserter(missing_d_values));
+
+        if (missing_d_values.empty()) {
+            child_p.erase(child_p.begin() + static_cast<int>(i));
+        } else {
+            i++;
+        }
     }
 
     return child_p;

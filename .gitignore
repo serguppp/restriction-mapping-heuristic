@@ -1,10 +1,13 @@
 *.exe
 generator-beta.cpp
 /src/main
+/src/main_O3
 /src/generator
 /src/algorithm
 /src/heuristics
 /src/algorithm.cpp
+
+/tests/*
 
 env/
 __pycache__/

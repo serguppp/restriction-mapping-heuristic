@@ -7,7 +7,7 @@ from components.runner import CppRunner
 from components.task_state import TaskState
 from components.types import States
 
-CPP_EXE_PATH = "./src/main"
+CPP_EXE_PATH = "./src/main_O3"
 runner = CppRunner(CPP_EXE_PATH)
 
 
@@ -49,7 +49,7 @@ with tab_config:
             task_state.max_value = st.number_input(
                 "Max Distance Value",
                 min_value=1,
-                max_value=1000,
+                max_value=100000,
                 key="task_state.max_value",
             )
             task_state.negative_errors = st.number_input(
