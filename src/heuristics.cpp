@@ -230,9 +230,10 @@ Result GeneticAlgorithm::run() {
     auto start_time = std::chrono::steady_clock::now();
     std::chrono::duration<double> elapsed_time;
     int generation = 0;
+    int generations_without_progress = 0;
     Individual best_individual = population[0];
 
-    while (generation < config.MAX_GENERATIONS) {
+    while (true) {
         if (stop) {
             std::cerr << "Algorithm stopped by user \n";
             break;
@@ -251,6 +252,10 @@ Result GeneticAlgorithm::run() {
             break;
         }
 
+        if (generations_without_progress >= config.MAX_GENERATIONS) {
+            std::cerr << "Algorithm stopped by generations limit \n";
+            break;
+        }
         std::vector<Individual> new_population;
         new_population.reserve(config.POPULATION_SIZE);
 
@@ -299,6 +304,9 @@ Result GeneticAlgorithm::run() {
 
         if (population[0].fitness > best_individual.fitness) {
             best_individual = population[0];
+            generations_without_progress = 0;
+        } else {
+            generations_without_progress++;
         }
 
         generation++;

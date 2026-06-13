@@ -18,7 +18,7 @@ class TaskState:
     mutation_rate: float = 0.05
     crossover_rate: float = 0.8
     elite_rate: float = 0.1
-    max_generations: int = 100
+    max_generations: int = 25
     tournament_size: int = 5
     max_time: float = 60.0
 
