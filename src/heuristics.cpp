@@ -174,7 +174,12 @@ std::vector<int> GeneticAlgorithm::repair(std::vector<int> child_p) {
             }
         }
 
-        int best = cover_count_d > cover_count_d_max ? d : d_max;
+        int best;
+        if (cover_count_d == cover_count_d_max) {
+            best = (random_double() < 0.5) ? d : d_max;
+        } else {
+            best = cover_count_d > cover_count_d_max ? d : d_max;
+        }
         child_p.push_back(best);
         std::ranges::sort(child_p);
     }

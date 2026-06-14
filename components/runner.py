@@ -1,8 +1,9 @@
 import subprocess
+from pathlib import Path
 
 
 class CppRunner:
-    def __init__(self, exe_path: str) -> None:
+    def __init__(self, exe_path: Path) -> None:
         self.exe_path = exe_path
 
     def run_generate_p_and_d(self, args: list[str]) -> str:
