@@ -9,6 +9,18 @@
 
 extern std::atomic<bool> stop;
 
+Config::Config() : POPULATION_SIZE(100), MUTATION_RATE(0.05), CROSSOVER_RATE(0.8), ELITE_RATE(0.1), MAX_GENERATIONS(25), TOURNAMENT_SIZE(5), SEEDED_POPULATION_RATE(0.1), MAX_TIME(60) {}
+Config::Config(const Parameters& p) : Config() {
+    POPULATION_SIZE = p.population_size;
+    MUTATION_RATE = p.mutation_rate;
+    CROSSOVER_RATE = p.crossover_rate;
+    ELITE_RATE = p.elite_rate;
+    MAX_GENERATIONS = p.max_generations;
+    TOURNAMENT_SIZE = p.tournament_size;
+    MAX_TIME = p.max_time;
+    SEEDED_POPULATION_RATE = p.seeded_population_rate;
+}
+
 GeneticAlgorithm::GeneticAlgorithm(Config& cfg, std::mt19937& g, const std::vector<int>& d) : config(cfg), gen(g), D(d) {
     std::ranges::sort(D);
     C = set_candidates();
@@ -45,8 +57,6 @@ std::vector<int> GeneticAlgorithm::set_candidates() {
 
     return {candidates.begin(), candidates.end()};
 }
-
-bool GeneticAlgorithm::create_random_gene() { return random_double() < 0.01; }
 
 std::vector<Individual> GeneticAlgorithm::set_population() {
     std::vector<Individual> population;
@@ -270,10 +280,10 @@ Result GeneticAlgorithm::run() {
             message = "Algorithm stopped by generations limit";
             break;
         }
+
         std::vector<Individual> new_population;
         new_population.reserve(config.POPULATION_SIZE);
 
-        // these below move to separated functions
         int elite_count = static_cast<int>(config.ELITE_RATE * config.POPULATION_SIZE);
         for (int i = 0; i < elite_count; i++) {
             new_population.push_back(population[i]);
