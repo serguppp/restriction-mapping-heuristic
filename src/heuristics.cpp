@@ -5,11 +5,12 @@
 #include <chrono>
 #include <csignal>
 #include <iostream>
+#include <limits>
 #include <set>
 
 extern std::atomic<bool> stop;
 
-Config::Config() : POPULATION_SIZE(100), MUTATION_RATE(0.05), CROSSOVER_RATE(0.8), ELITE_RATE(0.1), MAX_GENERATIONS(25), TOURNAMENT_SIZE(5), SEEDED_POPULATION_RATE(0.1), MAX_TIME(60) {}
+Config::Config() : POPULATION_SIZE(100), MUTATION_RATE(0.05), CROSSOVER_RATE(0.8), ELITE_RATE(0.1), MAX_GENERATIONS(25), TOURNAMENT_SIZE(5), SEEDED_POPULATION_SIZE(0), MAX_TIME(60) {}
 Config::Config(const Parameters& p) : Config() {
     POPULATION_SIZE = p.population_size;
     MUTATION_RATE = p.mutation_rate;
@@ -18,7 +19,7 @@ Config::Config(const Parameters& p) : Config() {
     MAX_GENERATIONS = p.max_generations;
     TOURNAMENT_SIZE = p.tournament_size;
     MAX_TIME = p.max_time;
-    SEEDED_POPULATION_RATE = p.seeded_population_rate;
+    SEEDED_POPULATION_SIZE = p.seeded_population_size;
 }
 
 GeneticAlgorithm::GeneticAlgorithm(Config& cfg, std::mt19937& g, const std::vector<int>& d) : config(cfg), gen(g), D(d) {
@@ -62,16 +63,11 @@ std::vector<Individual> GeneticAlgorithm::set_population() {
     std::vector<Individual> population;
     population.reserve(config.POPULATION_SIZE);
 
-    int seed_count = static_cast<int>(config.SEEDED_POPULATION_RATE * config.POPULATION_SIZE);
-    if (config.SEEDED_POPULATION_RATE > 0.0 && seed_count < 1) {
-        seed_count = 1;
-    }
-
-    for (int i = 0; i < seed_count; i++) {
+    for (int i = 0; i < config.SEEDED_POPULATION_SIZE; i++) {
         population.push_back(create_seeded_individual());
     }
 
-    for (int i = seed_count; i < config.POPULATION_SIZE; i++) {
+    for (int i = config.SEEDED_POPULATION_SIZE; i < config.POPULATION_SIZE; i++) {
         population.push_back(create_random_individual());
     }
     std::ranges::sort(population, [](const Individual& a, const Individual& b) { return a.fitness > b.fitness; });
@@ -213,7 +209,7 @@ std::vector<int> GeneticAlgorithm::repair(std::vector<int> child_p) {
 
 Individual GeneticAlgorithm::select() {
     Individual best_ind;
-    best_ind.fitness = -1.0;
+    best_ind.fitness = std::numeric_limits<double>::lowest();
 
     for (int i = 0; i < config.TOURNAMENT_SIZE; i++) {
         int random_id = random_int(0, static_cast<int>(population.size() - 1));

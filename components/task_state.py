@@ -7,7 +7,7 @@ import streamlit as st
 class TaskState:
     # instance
     p_size: int = 10
-    max_value: int = 100
+    d_size: int = 100
     positive_errors: int = 0
     negative_errors: int = 0
     p_points: str = ""
@@ -20,7 +20,7 @@ class TaskState:
     elite_rate: float = 0.1
     max_generations: int = 25
     tournament_size: int = 5
-    seeded_population_rate: float = 0.1
+    seeded_population_size: int = 0
     max_time: float = 60.0
 
     # results
@@ -41,7 +41,7 @@ class TaskState:
             "elite_rate",
             "max_generations",
             "tournament_size",
-            "seeded_population_rate",
+            "seeded_population_size",
             "max_time",
         ]
 
@@ -49,7 +49,7 @@ class TaskState:
     def instance_fields(self) -> list[str]:
         return [
             "p_size",
-            "max_value",
+            "d_size",
             "positive_errors",
             "negative_errors",
         ]

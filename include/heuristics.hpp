@@ -20,7 +20,7 @@ struct Config {
     double ELITE_RATE;
     int MAX_GENERATIONS;
     int TOURNAMENT_SIZE;
-    double SEEDED_POPULATION_RATE;
+    int SEEDED_POPULATION_SIZE;
     std::chrono::duration<double> MAX_TIME;
 
     Config();

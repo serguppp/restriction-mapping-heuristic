@@ -38,11 +38,11 @@ Parameters parse_arguments(int argc, char** argv) {
     switch (params.flag) {
         case ExecutionMode::DEFAULT: {
             if (argc < 6) {
-                std::cerr << R"({"status": "error", "message": "Mode 0 requires parameters: <m:str> <max_value:str> <positive_errors:int> <negative_errors:int>"})" << "\n";
+                std::cerr << R"({"status": "error", "message": "Mode 0 requires parameters: <m:str> <d_size:str> <positive_errors:int> <negative_errors:int>"})" << "\n";
                 throw std::runtime_error("Invalid arguments");
             }
             params.m = std::stoi(argv[2]);
-            params.max_value = std::stoi(argv[3]);
+            params.d_size = std::stoi(argv[3]);
             params.positive_errors = std::stoi(argv[4]);
             params.negative_errors = std::stoi(argv[5]);
             break;
@@ -59,23 +59,22 @@ Parameters parse_arguments(int argc, char** argv) {
         }
 
         case ExecutionMode::RUN_HEURISTICS: {
-            if (argc < 12) {
+            if (argc < 11) {
                 std::cerr
-                    << R"({"status": "error", "message": "Mode 2 requires parameters: <mode:str> <p_list_json:str> <d_list_json:str> <population_size:str>, <mutation_rate:str>, <crossover_rate:str>, <elite_rate:str>, <max_generations:str>, <tournament_size:str>, <seeded_population_rate:str>, <max_time:str>"})"
+                    << R"({"status": "error", "message": "Mode 2 requires parameters: <mode:str> <d_list_json:str> <population_size:str>, <mutation_rate:str>, <crossover_rate:str>, <elite_rate:str>, <max_generations:str>, <tournament_size:str>, <seeded_population_size:str>, <max_time:str>"})"
                     << "\n";
                 throw std::runtime_error("Invalid arguments");
             }
             params.flag = ExecutionMode::RUN_HEURISTICS;
-            params.p_vector = json::parse(argv[2]).get<std::vector<int>>();
-            params.d_vector = json::parse(argv[3]).get<std::vector<int>>();
-            params.population_size = std::stoi(argv[4]);
-            params.mutation_rate = std::stod(argv[5]);
-            params.crossover_rate = std::stod(argv[6]);
-            params.elite_rate = std::stod(argv[7]);
-            params.max_generations = std::stoi(argv[8]);
-            params.tournament_size = std::stoi(argv[9]);
-            params.seeded_population_rate = std::stod(argv[10]);
-            params.max_time = std::chrono::duration<double>(std::stod(argv[11]));
+            params.d_vector = json::parse(argv[2]).get<std::vector<int>>();
+            params.population_size = std::stoi(argv[3]);
+            params.mutation_rate = std::stod(argv[4]);
+            params.crossover_rate = std::stod(argv[5]);
+            params.elite_rate = std::stod(argv[6]);
+            params.max_generations = std::stoi(argv[7]);
+            params.tournament_size = std::stoi(argv[8]);
+            params.seeded_population_size = std::stoi(argv[9]);
+            params.max_time = std::chrono::duration<double>(std::stod(argv[10]));
             break;
         }
         default: {
@@ -89,7 +88,7 @@ Parameters parse_arguments(int argc, char** argv) {
 json process_flags(const Parameters& params) {
     switch (params.flag) {
         case ExecutionMode::DEFAULT: {
-            auto p_vector = generate_p(params.m, params.max_value);
+            auto p_vector = generate_p(params.m, params.d_size);
             auto d_vector = generate_d_from_p(p_vector, params.positive_errors, params.negative_errors);
             return json{{"status", "success"}, {"p_points", p_vector}, {"d_distances", d_vector}};
         }

@@ -64,7 +64,7 @@ class PDEvent:
     def prepare_args(task_state: TaskState) -> list[str]:
         args = [
             str(task_state.p_size),
-            str(task_state.max_value),
+            str(task_state.d_size),
             str(task_state.positive_errors),
             str(task_state.negative_errors),
         ]
@@ -86,10 +86,8 @@ class PDEvent:
 class HeuristicEvent:
     @staticmethod
     def prepare_args(task_state: TaskState) -> list[str]:
-        p_list_json = dump_json(map_text_to_list(task_state.p_points))
         d_list_json = dump_json(map_text_to_list(task_state.d_distances))
         args = [
-            p_list_json,
             d_list_json,
             str(task_state.population_size),
             str(task_state.mutation_rate),
@@ -97,7 +95,7 @@ class HeuristicEvent:
             str(task_state.elite_rate),
             str(task_state.max_generations),
             str(task_state.tournament_size),
-            str(task_state.seeded_population_rate),
+            str(task_state.seeded_population_size),
             str(task_state.max_time),
         ]
         return args
@@ -106,8 +104,8 @@ class HeuristicEvent:
     def run_and_proceed(
         runner: CppRunner, task_state: TaskState, process: Process | None = None
     ) -> None:
-        if not task_state.p_points or not task_state.d_distances:
-            st.warning("P or D vector is empty")
+        if not task_state.d_distances:
+            st.warning("D vector is empty")
             return
 
         try:

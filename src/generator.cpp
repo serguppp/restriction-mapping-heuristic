@@ -9,12 +9,12 @@ std::mt19937& get_gen() {
     return gen;
 }
 
-std::vector<int> generate_p(int m, int max_value) {
-    if (max_value < m) {
-        throw std::invalid_argument("max_value must be greater than or equal to m to ensure unique values in P.");
+std::vector<int> generate_p(int m, int d_size) {
+    if (d_size < m) {
+        throw std::invalid_argument("d_size must be greater than or equal to m to ensure unique values in P.");
     }
 
-    std::uniform_int_distribution<> dis(1, max_value);
+    std::uniform_int_distribution<> dis(1, d_size);
     std::vector<int> p;
     p.reserve(m);
 

@@ -42,6 +42,10 @@ def save_results(task_state: TaskState) -> None:
             return
 
         data = asdict(task_state)
+        data["p_points"] = task_state.p_points.strip()
+        data["d_distances"] = task_state.d_distances.strip()
+        data["p_size"] = len(task_state.p_points.split(","))
+        data["d_size"] = len(task_state.d_distances.split(","))
         data.pop("success_msg")
         json_string = json.dumps(data)
 

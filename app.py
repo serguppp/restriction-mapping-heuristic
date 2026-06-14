@@ -45,7 +45,7 @@ with tab_config:
         with col_input_1:
             task_state.p_size = st.number_input(
                 "P Size",
-                min_value=1,
+                min_value=0,
                 max_value=100,
                 key="task_state.p_size",
             )
@@ -54,11 +54,11 @@ with tab_config:
             )
 
         with col_input_2:
-            task_state.max_value = st.number_input(
-                "Max Distance Value",
+            task_state.d_size = st.number_input(
+                "D Size",
                 min_value=1,
-                max_value=100000,
-                key="task_state.max_value",
+                max_value=10000,
+                key="task_state.d_size",
             )
             task_state.negative_errors = st.number_input(
                 "Negative Errors", min_value=0, key="task_state.negative_errors"
@@ -146,11 +146,11 @@ with tab_heuristic:
                 max_value=3600.0,
                 key="task_state.max_time",
             )
-            task_state.seeded_population_rate = st.number_input(
-                "Seeded Population Rate",
-                min_value=0.0,
-                max_value=1.0,
-                key="task_state.seeded_population_rate",
+            task_state.seeded_population_size = st.number_input(
+                "Seeded Population Size",
+                min_value=0,
+                max_value=10000,
+                key="task_state.seeded_population_size",
             )
 
         if process.run_state == States.IDLE:
@@ -238,8 +238,6 @@ with tab_results:
             col_h1.caption("**File Name**")
             col_h2.caption("**P size**")
             col_h3.caption("**m**")
-            col_h4.caption("**Action**")
-            col_h5.caption("**Del**")
             st.divider()
 
             for file_name, exp_state in saved_experiments:
@@ -282,7 +280,7 @@ with tab_results:
                     st.json(
                         {
                             "P Size": selected_state.p_size,
-                            "Max Distance Value": selected_state.max_value,
+                            "D size": selected_state.d_size,
                             "Positive Errors": selected_state.positive_errors,
                             "Negative Errors": selected_state.negative_errors,
                         }
@@ -296,7 +294,7 @@ with tab_results:
                             "Crossover Rate": selected_state.crossover_rate,
                             "Elite Rate": selected_state.elite_rate,
                             "Tournament Size": selected_state.tournament_size,
-                            "Seeded Population Rate": selected_state.seeded_population_rate,
+                            "Seeded Population Size": selected_state.seeded_population_size,
                             "Max Generations": selected_state.max_generations,
                             "Max Time": selected_state.max_time,
                         }
@@ -315,5 +313,12 @@ with tab_results:
                     )
                 else:
                     st.warning("No iteration history stored inside this file.")
+
+                st.json(
+                    {
+                        "P Points": selected_state.p_points,
+                        "D Distances": selected_state.d_distances,
+                    }
+                )
 
 process.update()

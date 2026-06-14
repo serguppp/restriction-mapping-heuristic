@@ -1,15 +1,12 @@
-*.exe
-generator-beta.cpp
-/src/main
-/src/main_O3
-/src/main_O3_seeds
-/src/main_O3_noseeds
-/src/generator
-/src/algorithm
-/src/heuristics
-/src/algorithm.cpp
+/src/*
+!/src/main.cpp
+!/src/heuristics.cpp
+!/src/generator.cpp
 
 /tests/*
+genetic_algorithm_results.csv
+
+/results/*
 
 env/
 __pycache__/
