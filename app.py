@@ -115,6 +115,8 @@ with tab_heuristic:
                 "Mutation Rate",
                 min_value=0.001,
                 max_value=1.0,
+                step=0.001,
+                format="%.3f",
                 key="task_state.mutation_rate",
             )
             task_state.crossover_rate = st.number_input(

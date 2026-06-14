@@ -115,7 +115,7 @@ Individual GeneticAlgorithm::create_random_individual() {
     ind.chromosome.resize(C.size(), false);
 
     double target_p_size = (1.0 + std::sqrt(1.0 + (8.0 * static_cast<double>(C.size())))) / 2.0;
-    double prob = std::min(1.0, (target_p_size * 1.2) / static_cast<int>(C.size()));
+    double prob = std::min(1.0, (target_p_size) / static_cast<int>(C.size()));
 
     for (size_t i = 1; i < C.size() - 1; i++) {
         if (random_double() < prob) {
